@@ -1,0 +1,146 @@
+/* ==========================================================================
+   CAROLINA — Product detail (product.html)
+   ========================================================================== */
+
+@import url('base.css');
+
+.product-detail {
+  max-width: var(--container);
+  margin: 18px auto 90px;
+  padding: 0 32px;
+  display: grid;
+  grid-template-columns: 90px 1fr 1fr;
+  gap: 24px;
+}
+
+.product-detail h1 {
+  grid-column: 1 / -1;
+  font-family: var(--font-display);
+  font-size: 30px;
+  margin: 6px 0 20px;
+}
+
+.thumb-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.thumb-col button {
+  padding: 0;
+  border: 1px solid transparent;
+  background: var(--placeholder);
+  cursor: pointer;
+}
+
+.thumb-col img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.thumb-col button.active {
+  border-color: var(--gold);
+}
+
+.main-image {
+  border: 1px solid var(--line);
+  background: var(--placeholder);
+  overflow: hidden;
+}
+
+.main-image img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.detail-info {
+  padding-left: 10px;
+}
+
+.detail-price {
+  font-family: var(--font-body);
+  font-size: 22px;
+  font-weight: 600;
+  margin: 4px 0 18px;
+}
+
+.detail-label {
+  font-family: var(--font-nav);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+  text-align: center;
+  margin: 0 0 12px;
+}
+
+.swatches {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 26px;
+}
+
+.swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.swatch.selected {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 1px var(--white) inset;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 0 0 20px;
+}
+
+.detail-info h2 {
+  font-family: var(--font-display);
+  font-size: 19px;
+  margin: 0 0 12px;
+}
+
+.detail-info p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  margin: 0 0 26px;
+}
+
+@media (max-width: 900px) {
+  .product-detail {
+    grid-template-columns: 1fr;
+    padding: 0 20px;
+  }
+
+  .thumb-col {
+    flex-direction: row;
+    order: 2;
+  }
+
+  .thumb-col button {
+    width: 72px;
+    flex: 0 0 72px;
+  }
+
+  .main-image {
+    order: 1;
+  }
+
+  .detail-info {
+    order: 3;
+    padding-left: 0;
+  }
+
+  .product-detail h1 {
+    order: 0;
+  }
+}

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carolina — Change Your Style. Walk in Comfort.</title>
+  <meta name="description"
+    content="Carolina — premium socks. All-day comfort, premium quality, made for every step." />
+  <link rel="stylesheet" href="css/index.css" />
+</head>
+
+<body class="page-home">
+
+  <header>
+    <div class="site-header">
+      <div class="header-left">
+        <button class="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+        <nav>
+          <ul class="main-nav">
+            <li><a href="index.html" aria-current="page">Home</a></li>
+            <li><a href="collections.html">Collections</a></li>
+            <li><a href="cart.html">Cart</a></li>
+          </ul>
+        </nav>
+      </div>
+
+      <a href="index.html" class="logo">
+                <img src="images/Carolina_logo.svg" alt="Carolina" class="logo-mark" width="126" height="96" />
+      </a>
+
+      <div class="header-right">
+        <a href="cart.html" class="icon-btn" aria-label="Cart">
+          <img src="images/Cart.svg" alt="" width="18" height="18" />
+          <span class="cart-count" data-cart-count hidden>0</span>
+        </a>
+        <a href="contact.html" class="phone-link" aria-label="Contact Carolina">
+          <img src="images/contact.svg" alt="" width="20" height="20" />
+        </a>
+      </div>
+
+      <div class="mobile-nav">
+        <ul>
+          <li><a href="index.html" aria-current="page">Home</a></li>
+          <li><a href="collections.html">Collections</a></li>
+          <li><a href="cart.html">Cart</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" aria-label="Featured">
+      <div class="hero-frame">
+        <div class="hero-slide is-active">
+          <img src="images/introduce.png" alt="Carolina — Change Your Style. Walk in Comfort." />
+        </div>
+        <div class="hero-slide">
+          <img src="images/introduce2.png"
+            alt="Carolina socks — All-Day Comfort, Premium Quality, Made for Every Step" />
+        </div>
+        <div class="hero-slide">
+          <img src="images/introduce3.png"
+            alt="Carolina — The Art of the Every Step. Cultivated Comfort. Refined Style." />
+        </div>
+
+        <button class="hero-arrow prev" type="button" aria-label="Previous slide">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M15 6l-6 6 6 6" />
+          </svg>
+        </button>
+        <button class="hero-arrow next" type="button" aria-label="Next slide">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M9 6l6 6-6 6" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="hero-dots" role="tablist" aria-label="Hero slides">
+        <button type="button" class="hero-dot is-active" role="tab" aria-selected="true"
+          aria-label="Slide 1"></button>
+        <button type="button" class="hero-dot" role="tab" aria-selected="false" aria-label="Slide 2"></button>
+        <button type="button" class="hero-dot" role="tab" aria-selected="false" aria-label="Slide 3"></button>
+      </div>
+    </section>
+
+    <section class="stats" aria-label="Brand highlights">
+      <div class="stat">
+        <div class="stat-num">2000+</div>
+        <div class="stat-label">HIGH-QUALITY PRODUCTS</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">35,000+</div>
+        <div class="stat-label">HAPPY CUSTOMERS</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">50+</div>
+        <div class="stat-label">PREMIUM DESIGNS</div>
+      </div>
+    </section>
+
+    <div class="cta-row">
+      <a href="collections.html" class="btn-gold">
+        GO TO SHOP
+        <svg viewBox="0 0 24 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <path d="M0 6h22M17 1l5 5-5 5" />
+        </svg>
+      </a>
+    </div>
+  </main>
+
+  <a href="https://wa.me/902245557842" class="whatsapp-float" aria-label="Chat on WhatsApp" target="_blank"
+    rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 20zm4.4-5.9c-.2-.1-1.4-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.2-.6.8-.8 1-.1.2-.3.2-.5.1-.2-.1-1-.4-1.9-1.2-.7-.6-1.2-1.4-1.3-1.6-.1-.2 0-.4.1-.5.1-.1.2-.3.4-.4.1-.1.2-.3.2-.4.1-.2 0-.3 0-.4-.1-.1-.6-1.4-.8-1.9-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.6.3-.2.2-.8.8-.8 1.9s.8 2.2.9 2.4c.1.2 1.6 2.4 3.8 3.4.5.2.9.4 1.3.5.5.2 1 .1 1.4.1.4-.1 1.4-.6 1.6-1.1.2-.5.2-1 .1-1.1-.1-.1-.2-.2-.4-.3z" />
+    </svg>
+  </a>
+
+  <script src="script.js"></script>
+</body>
+
+</html>

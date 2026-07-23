@@ -1,0 +1,352 @@
+/* ==========================================================================
+   CAROLINA — Payment (payment.html)
+   ========================================================================== */
+
+@import url('base.css');
+
+.page-payment {
+  background:
+    radial-gradient(ellipse 80% 50% at 10% 0%, rgba(201, 161, 92, 0.08), transparent 55%),
+    linear-gradient(180deg, #faf8f4 0%, #ffffff 40%, #ffffff 100%);
+  min-height: 100vh;
+}
+
+.payment-layout {
+  max-width: var(--container);
+  margin: 24px auto 90px;
+  padding: 0 32px;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 48px;
+  align-items: start;
+}
+
+.payment-layout h1 {
+  font-family: var(--font-display);
+  font-size: 30px;
+  margin: 10px 0 8px;
+}
+
+.payment-lead {
+  font-size: 14px;
+  color: var(--ink-soft);
+  margin: 0 0 28px;
+  max-width: 42ch;
+}
+
+.pay-methods {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.pay-option {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.pay-option:hover {
+  border-color: var(--gold);
+}
+
+.pay-option.is-selected {
+  border-color: var(--gold-dark);
+  background: linear-gradient(135deg, rgba(201, 161, 92, 0.12), rgba(255, 255, 255, 0.9));
+}
+
+.pay-option input {
+  accent-color: var(--gold-dark);
+  width: 16px;
+  height: 16px;
+}
+
+.pay-option-title {
+  font-family: var(--font-nav);
+  font-size: 16px;
+  margin: 0 0 2px;
+}
+
+.pay-option-desc {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.pay-badge {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold-dark);
+  border: 1px solid var(--gold);
+  padding: 4px 8px;
+}
+
+.card-fields {
+  display: none;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 22px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  background: var(--cream);
+  animation: payRise 0.35s ease;
+}
+
+.card-fields.is-open {
+  display: grid;
+}
+
+.card-fields .span-2 {
+  grid-column: 1 / -1;
+}
+
+.card-fields label {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  font-family: var(--font-nav);
+}
+
+.card-fields input {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--white);
+  padding: 12px 14px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.instapay-note {
+  display: none;
+  padding: 16px 18px;
+  border: 1px dashed var(--gold);
+  background: rgba(201, 161, 92, 0.08);
+  margin-bottom: 22px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  animation: payRise 0.35s ease;
+}
+
+.instapay-note.is-open {
+  display: block;
+}
+
+.instapay-note strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.place-order-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--gold);
+  border: none;
+  padding: 16px 22px;
+  font-family: var(--font-nav);
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.place-order-btn:hover:not(:disabled) {
+  background: var(--gold-dark);
+}
+
+.place-order-btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.place-order-btn svg {
+  width: 18px;
+  height: 12px;
+  stroke: var(--ink);
+  fill: none;
+}
+
+.secure-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.secure-row svg {
+  width: 14px;
+  height: 14px;
+  stroke: var(--gold-dark);
+  fill: none;
+}
+
+.order-summary {
+  border: 1px solid var(--line);
+  padding: 26px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(6px);
+}
+
+.order-summary-top {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-nav);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  margin-bottom: 20px;
+}
+
+.order-summary-top .count {
+  color: var(--gold-dark);
+}
+
+.ship-box {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 16px 0;
+  margin-bottom: 18px;
+}
+
+.ship-box h2 {
+  font-family: var(--font-nav);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  margin: 0 0 8px;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+.ship-box p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.order-row {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.order-row img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border: 1px solid var(--line);
+}
+
+.order-row-name {
+  font-size: 14px;
+  margin: 0 0 2px;
+}
+
+.order-row-variant {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin: 0 0 6px;
+}
+
+.order-row-bottom {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  margin-bottom: 14px;
+}
+
+.summary-row.total {
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+  margin-top: 16px;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.sale-tag {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--gold-dark);
+  border: 1px solid var(--gold);
+  padding: 1px 5px;
+  vertical-align: middle;
+}
+
+.payment-empty,
+.payment-success {
+  max-width: 520px;
+  margin: 40px auto;
+  text-align: center;
+  padding: 48px 28px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.9);
+  animation: payRise 0.45s ease;
+}
+
+.payment-empty p,
+.payment-success p {
+  font-family: var(--font-nav);
+  font-size: 18px;
+  color: var(--ink-soft);
+  margin: 0 0 20px;
+}
+
+.payment-success h1 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  margin: 0 0 12px;
+}
+
+.payment-success .order-id {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--gold-dark);
+  margin-bottom: 24px;
+}
+
+@keyframes payRise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 900px) {
+  .payment-layout {
+    grid-template-columns: 1fr;
+    padding: 0 20px;
+  }
+
+  .card-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .card-fields .span-2 {
+    grid-column: auto;
+  }
+}

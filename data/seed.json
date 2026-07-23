@@ -1,0 +1,161 @@
+{
+  "credentials": {
+    "username": "carolina",
+    "email": "shop.carolina.eg@gmail.com"
+  },
+  "products": [
+    {
+      "id": "sheer-polka-black",
+      "name": "Sheer Ankle Socks — Polka Dot",
+      "price": 199,
+      "images": [
+        "images/products/sheer-polka-black.png",
+        "images/products/sock-detail-2.jpg"
+      ],
+      "colors": [
+        { "name": "BLACK", "hex": "#111111" },
+        { "name": "NUDE", "hex": "#C4A484" },
+        { "name": "WHITE", "hex": "#ffffff" }
+      ],
+      "sizes": ["FREE SIZE"],
+      "size": "FREE SIZE",
+      "description": "Women's sheer ankle socks in a classic black polka-dot mesh. Lightweight nylon with a soft elastic cuff, reinforced heel and toe for everyday elegance with flats, loafers, or heels.",
+      "stock": 50,
+      "active": true
+    },
+    {
+      "id": "sheer-floral-white",
+      "name": "Sheer Crew Socks — Floral",
+      "price": 189,
+      "images": [
+        "images/products/sheer-floral-white.png",
+        "images/products/sock-detail-3.jpg"
+      ],
+      "colors": [
+        { "name": "WHITE", "hex": "#ffffff" },
+        { "name": "CREAM", "hex": "#F5F0E6" },
+        { "name": "BLACK", "hex": "#111111" }
+      ],
+      "sizes": ["FREE SIZE"],
+      "size": "FREE SIZE",
+      "description": "Delicate sheer crew socks with a soft floral motif. Breathable mesh body, opaque cuff, heel, and toe — refined enough for formal looks, comfortable enough for all day.",
+      "stock": 50,
+      "active": true
+    },
+    {
+      "id": "sheer-star-cream",
+      "name": "Sheer Crew Socks — Star",
+      "price": 189,
+      "images": [
+        "images/products/sheer-star-cream.png",
+        "images/products/sock-detail-4.jpg"
+      ],
+      "colors": [
+        { "name": "CREAM", "hex": "#F5F0E6" },
+        { "name": "WHITE", "hex": "#ffffff" },
+        { "name": "NUDE", "hex": "#C4A484" }
+      ],
+      "sizes": ["FREE SIZE"],
+      "size": "FREE SIZE",
+      "description": "Sheer cream crew socks patterned with crisp white stars. Ultra-thin nylon with a secure ribbed cuff and reinforced finish for a polished, barely-there feel.",
+      "stock": 50,
+      "active": true
+    },
+    {
+      "id": "sheer-nude-flat",
+      "name": "Sheer Nude Ankle Socks",
+      "price": 149,
+      "images": [
+        "images/products/sheer-nude-flat.png",
+        "images/products/sheer-nude-worn.jpg"
+      ],
+      "colors": [
+        { "name": "NUDE", "hex": "#C4A484" },
+        { "name": "BEIGE", "hex": "#D2B48C" },
+        { "name": "BLACK", "hex": "#111111" }
+      ],
+      "sizes": ["FREE SIZE"],
+      "size": "FREE SIZE",
+      "description": "Essential sheer nude ankle socks designed for a smooth, barely-there look. Soft elastic cuff, reinforced heel and toe — perfect under loafers, flats, and formal shoes.",
+      "stock": 50,
+      "active": true
+    },
+    {
+      "id": "overknee-mosaic",
+      "name": "Over-Knee Socks — Mosaic",
+      "price": 249,
+      "images": [
+        "images/products/overknee-mosaic.png",
+        "images/products/overknee-mosaic-flat.jpeg"
+      ],
+      "colors": [
+        { "name": "WHITE", "hex": "#ffffff" },
+        { "name": "GRAY", "hex": "#9A9A9A" }
+      ],
+      "sizes": ["FREE SIZE"],
+      "size": "FREE SIZE",
+      "description": "Statement over-knee socks in a soft white mosaic knit. Stretch comfort from cuff to toe with a modern geometric texture that elevates casual and dress looks alike.",
+      "stock": 40,
+      "active": true
+    },
+    {
+      "id": "ankle-beige-pack",
+      "name": "Mesh Ankle Socks — Beige Pack",
+      "price": 129,
+      "images": [
+        "images/products/ankle-beige-pack.jpg",
+        "images/products/sock-detail-5.jpg"
+      ],
+      "colors": [
+        { "name": "BEIGE", "hex": "#D2B48C" },
+        { "name": "NUDE", "hex": "#C4A484" }
+      ],
+      "sizes": ["FREE SIZE"],
+      "size": "FREE SIZE",
+      "description": "Breathable beige mesh ankle socks with reinforced toe and heel. A versatile everyday staple with a slim profile that disappears under sneakers and loafers.",
+      "stock": 60,
+      "active": true
+    },
+    {
+      "id": "sheer-nude-worn",
+      "name": "Sheer Nude Socks — Everyday",
+      "price": 139,
+      "images": [
+        "images/products/sheer-nude-worn.jpg",
+        "images/products/sheer-nude-flat.png"
+      ],
+      "colors": [
+        { "name": "NUDE", "hex": "#C4A484" },
+        { "name": "TAN", "hex": "#D2B48C" },
+        { "name": "WHITE", "hex": "#ffffff" }
+      ],
+      "sizes": ["FREE SIZE"],
+      "size": "FREE SIZE",
+      "description": "Fine sheer nude socks for everyday wear. Lightweight, breathable, and shaped for a natural skin-tone finish with a comfortable elastic cuff.",
+      "stock": 50,
+      "active": true
+    },
+    {
+      "id": "sheer-detail-set",
+      "name": "Sheer Detail Ankle Socks",
+      "price": 159,
+      "images": [
+        "images/products/sock-detail-3.jpg",
+        "images/products/sock-detail-2.jpg"
+      ],
+      "colors": [
+        { "name": "BLACK", "hex": "#111111" },
+        { "name": "NUDE", "hex": "#C4A484" },
+        { "name": "OLIVE", "hex": "#8A8F3A" }
+      ],
+      "sizes": ["FREE SIZE"],
+      "size": "FREE SIZE",
+      "description": "Refined sheer ankle socks with a clean silhouette and soft stretch. Designed for all-day comfort and an elegant finish with any shoe.",
+      "stock": 50,
+      "active": true
+    }
+  ],
+  "sales": [],
+  "orders": [],
+  "resetTokens": {}
+}

@@ -1,0 +1,17 @@
+{
+  "name": "carolina",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Carolina socks shop — storefront, payment, and admin",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "vercel": "vercel dev"
+  },
+  "dependencies": {
+    "nodemailer": "^6.10.1"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
