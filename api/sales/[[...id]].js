@@ -8,12 +8,38 @@ const { normalizeSale } = require('../../lib/catalog');
 function getId(req) {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const parts = url.pathname.split('/').filter(Boolean);
-  return decodeURIComponent(parts[parts.length - 1] || '');
+  const idx = parts.indexOf('sales');
+  const rest = idx !== -1 ? parts.slice(idx + 1) : [];
+  return rest.length ? decodeURIComponent(rest[rest.length - 1]) : null;
 }
 
 module.exports = async function handler(req, res) {
   const id = getId(req);
-  if (!id) return sendJson(res, 400, { error: 'Sale id required' });
+
+  if (!id) {
+    if (req.method === 'GET') {
+      const auth = await requireAdmin(req);
+      if (!auth.ok) return sendJson(res, auth.status, { error: auth.error });
+      const db = await loadDb();
+      return sendJson(res, 200, { sales: db.sales || [] });
+    }
+
+    if (req.method === 'POST') {
+      const auth = await requireAdmin(req);
+      if (!auth.ok) return sendJson(res, auth.status, { error: auth.error });
+
+      const body = await readBody(req);
+      const parsed = normalizeSale(body);
+      if (parsed.error) return sendJson(res, 400, { error: parsed.error });
+
+      const db = await loadDb();
+      db.sales.unshift(parsed.sale);
+      await saveDb(db);
+      return sendJson(res, 201, { sale: parsed.sale });
+    }
+
+    return methodNotAllowed(res, ['GET', 'POST']);
+  }
 
   if (req.method === 'PUT' || req.method === 'PATCH') {
     const auth = await requireAdmin(req);

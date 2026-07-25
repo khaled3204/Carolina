@@ -30,18 +30,10 @@ function loadHandler(relPath) {
 
 async function routeApi(req, res, pathname) {
   const map = [
-    [/^\/api\/auth\/login\/?$/, 'auth/login.js'],
-    [/^\/api\/auth\/logout\/?$/, 'auth/logout.js'],
-    [/^\/api\/auth\/me\/?$/, 'auth/me.js'],
-    [/^\/api\/auth\/credentials\/?$/, 'auth/credentials.js'],
-    [/^\/api\/auth\/forgot-password\/?$/, 'auth/forgot-password.js'],
-    [/^\/api\/auth\/reset-password\/?$/, 'auth/reset-password.js'],
-    [/^\/api\/products\/?$/, 'products/index.js'],
-    [/^\/api\/products\/[^/]+\/?$/, 'products/[id].js'],
-    [/^\/api\/sales\/?$/, 'sales/index.js'],
-    [/^\/api\/sales\/[^/]+\/?$/, 'sales/[id].js'],
-    [/^\/api\/orders\/?$/, 'orders/index.js'],
-    [/^\/api\/orders\/[^/]+\/?$/, 'orders/[id].js'],
+    [/^\/api\/auth\/[^/]+\/?$/, 'auth/[action].js'],
+    [/^\/api\/products(\/.*)?\/?$/, 'products/[[...id]].js'],
+    [/^\/api\/sales(\/.*)?\/?$/, 'sales/[[...id]].js'],
+    [/^\/api\/orders(\/.*)?\/?$/, 'orders/[[...id]].js'],
     [/^\/api\/upload\/?$/, 'upload.js']
   ];
 
