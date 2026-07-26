@@ -360,13 +360,13 @@ const initProductDetail = () => {
       <h1>${product.name}</h1>
       <div class="thumb-col">
         ${product.images
-          .map(
-            (src, i) => `
+        .map(
+          (src, i) => `
           <button type="button" data-thumb class="${i === 0 ? 'active' : ''}" data-full="${src}" aria-label="View image ${i + 1}">
             <img src="${src}" alt="" />
           </button>`
-          )
-          .join('')}
+        )
+        .join('')}
       </div>
       <div class="main-image">
         <img data-main-image src="${product.images[0]}" alt="${product.name}" />
@@ -376,25 +376,24 @@ const initProductDetail = () => {
         <p class="detail-label">COLOR : <span data-color-label>${selectedColor}</span></p>
         <div class="swatches">
           ${product.colors
-            .map(
-              (c) => `
+        .map(
+          (c) => `
             <button type="button" class="swatch ${c.name === selectedColor ? 'selected' : ''}"
               style="background:${c.hex}${c.hex.toLowerCase() === '#ffffff' ? ';border:1px solid #ddd' : ''}"
               data-color="${c.name}" aria-label="${c.name}"></button>`
-            )
-            .join('')}
+        )
+        .join('')}
         </div>
         <p class="detail-label">SIZE : <span data-size-label>${selectedSize}</span></p>
-        ${
-          sizes.length > 1
-            ? `<div class="swatches" style="gap:8px">${sizes
-                .map(
-                  (s) =>
-                    `<button type="button" class="btn-gold" style="padding:8px 14px;font-size:12px;background:${s === selectedSize ? 'var(--gold)' : 'var(--cream)'}" data-size="${s}">${s}</button>`
-                )
-                .join('')}</div>`
-            : ''
-        }
+        ${sizes.length > 1
+        ? `<div class="swatches" style="gap:8px">${sizes
+          .map(
+            (s) =>
+              `<button type="button" class="btn-gold" style="padding:8px 14px;font-size:12px;background:${s === selectedSize ? 'var(--gold)' : 'var(--cream)'}" data-size="${s}">${s}</button>`
+          )
+          .join('')}</div>`
+        : ''
+      }
         <hr class="divider" />
         <h2>Description</h2>
         <p>${product.description || ''}</p>
@@ -460,11 +459,11 @@ const initCartPage = () => {
     root.innerHTML = `
       <div class="cart-items">
         ${items
-          .map((item, index) => {
-            const product = getProduct(item.id);
-            const line = unitPrice(product) * item.qty;
-            const size = item.size || product.size || 'FREE SIZE';
-            return `
+        .map((item, index) => {
+          const product = getProduct(item.id);
+          const line = unitPrice(product) * item.qty;
+          const size = item.size || product.size || 'FREE SIZE';
+          return `
             <div class="cart-row" data-index="${index}">
               <img src="${product.images[0]}" alt="${product.name}" />
               <div>
@@ -480,8 +479,8 @@ const initCartPage = () => {
               </div>
               <div class="line-total">${money(line)}</div>
             </div>`;
-          })
-          .join('')}
+        })
+        .join('')}
       </div>
       <div class="summary-box">
         <div class="summary-row"><span>Subtotal</span><span>${moneyFixed(subtotal)}</span></div>
@@ -579,10 +578,10 @@ const initCheckoutPage = () => {
           <span class="count">(${count})</span>
         </div>
         ${items
-          .map((item, index) => {
-            const product = getProduct(item.id);
-            const size = item.size || product.size || 'FREE SIZE';
-            return `
+        .map((item, index) => {
+          const product = getProduct(item.id);
+          const size = item.size || product.size || 'FREE SIZE';
+          return `
             <div class="order-row" data-index="${index}">
               <img src="${product.images[0]}" alt="${product.name}" />
               <div>
@@ -594,8 +593,8 @@ const initCheckoutPage = () => {
                 <div class="order-row-bottom"><span>(${item.qty})</span><span>${money(unitPrice(product) * item.qty)}</span></div>
               </div>
             </div>`;
-          })
-          .join('')}
+        })
+        .join('')}
         <div class="summary-row"><span>Subtotal</span><span>${moneyFixed(subtotal)}</span></div>
         <div class="summary-row"><span>Shipping</span><span>${moneyFixed(SHIPPING)}</span></div>
         <div class="summary-row total"><span>Total</span><span>${moneyFixed(total)}</span></div>
@@ -755,14 +754,14 @@ const initPaymentPage = () => {
           </p>
         </div>
         ${items
-          .map((item) => {
-            const product = getProduct(item.id);
-            const size = item.size || product.size || 'FREE SIZE';
-            const sale =
-              product.salePrice != null
-                ? `<span class="sale-tag">Sale</span>`
-                : '';
-            return `
+        .map((item) => {
+          const product = getProduct(item.id);
+          const size = item.size || product.size || 'FREE SIZE';
+          const sale =
+            product.salePrice != null
+              ? `<span class="sale-tag">Sale</span>`
+              : '';
+          return `
             <div class="order-row">
               <img src="${product.images[0]}" alt="${product.name}" />
               <div>
@@ -771,8 +770,8 @@ const initPaymentPage = () => {
                 <div class="order-row-bottom"><span>(${item.qty})</span><span>${money(unitPrice(product) * item.qty)}</span></div>
               </div>
             </div>`;
-          })
-          .join('')}
+        })
+        .join('')}
         <div class="summary-row"><span>Subtotal</span><span>${moneyFixed(subtotal)}</span></div>
         <div class="summary-row"><span>Shipping</span><span>${moneyFixed(SHIPPING)}</span></div>
         <div class="summary-row total"><span>Total</span><span>${moneyFixed(total)}</span></div>
@@ -860,10 +859,47 @@ const initPaymentPage = () => {
 const initContactForm = () => {
   const form = document.querySelector('[data-contact-form]');
   if (!form) return;
-  form.addEventListener('submit', (e) => {
+
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    form.reset();
-    showToast('Message sent — we will reply soon');
+
+    const submitBtn = form.querySelector('.contact-submit');
+    const fd = new FormData(form);
+    const payload = {
+      name: String(fd.get('name') || '').trim(),
+      email: String(fd.get('email') || '').trim(),
+      message: String(fd.get('message') || '').trim()
+    };
+
+    if (!payload.name || !payload.email || !payload.message) {
+      showToast('Please fill in all fields');
+      return;
+    }
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending…';
+    }
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not send message');
+
+      form.reset();
+      showToast('Message sent — we will reply soon');
+    } catch (err) {
+      showToast(err.message || 'Could not send message. Try WhatsApp instead.');
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Message';
+      }
+    }
   });
 };
 

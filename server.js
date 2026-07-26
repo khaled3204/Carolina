@@ -34,6 +34,7 @@ async function routeApi(req, res, pathname) {
     [/^\/api\/products(\/.*)?\/?$/, 'products/[[...id]].js'],
     [/^\/api\/sales(\/.*)?\/?$/, 'sales/[[...id]].js'],
     [/^\/api\/orders(\/.*)?\/?$/, 'orders/[[...id]].js'],
+    [/^\/api\/contact\/?$/, 'contact.js'],
     [/^\/api\/upload\/?$/, 'upload.js']
   ];
 
