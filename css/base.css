@@ -351,6 +351,117 @@ button {
   transform: translateY(0);
 }
 
+/* ============================== RECEIPT POPUP ============================== */
+.receipt-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 26, 26, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+
+.receipt-modal {
+  position: relative;
+  background: var(--white);
+  max-width: 420px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 32px 28px;
+  border: 1px solid var(--gold);
+  animation: receiptIn 0.25s ease;
+}
+
+@keyframes receiptIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.receipt-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  border: none;
+  background: none;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--ink-soft);
+}
+
+.receipt-modal h2 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  margin: 0 0 6px;
+}
+
+.receipt-code {
+  font-family: var(--font-nav);
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  color: var(--gold-dark);
+  margin: 0 0 18px;
+}
+
+.receipt-items {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 14px 0;
+  margin-bottom: 14px;
+}
+
+.receipt-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 8px;
+  gap: 12px;
+}
+
+.receipt-item small {
+  color: var(--ink-soft);
+}
+
+.receipt-totals div {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.receipt-total-row {
+  font-weight: 600;
+  font-size: 15px;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+  margin-top: 4px;
+}
+
+.receipt-note {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin: 16px 0;
+}
+
+/* ============================== ACCOUNT NAV ============================== */
+[data-account-link] svg {
+  width: 18px;
+  height: 18px;
+}
+
+.stock-pill {
+  display: inline-block;
+}
+
 @media (max-width: 1100px) {
   .site-header {
     padding: 22px 40px;

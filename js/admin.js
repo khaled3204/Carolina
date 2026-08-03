@@ -15,6 +15,7 @@
     products: [],
     sales: [],
     orders: [],
+    coupons: [],
     editingId: null,
     message: '',
     error: '',
@@ -84,14 +85,16 @@
   }
 
   async function loadDashboard() {
-    const [productsRes, salesRes, ordersRes] = await Promise.all([
+    const [productsRes, salesRes, ordersRes, couponsRes] = await Promise.all([
       api('/api/products?all=1'),
       api('/api/sales'),
-      api('/api/orders')
+      api('/api/orders'),
+      api('/api/coupons')
     ]);
     state.products = productsRes.products || [];
     state.sales = salesRes.sales || [];
     state.orders = ordersRes.orders || [];
+    state.coupons = couponsRes.coupons || [];
   }
 
   function render() {
@@ -242,6 +245,7 @@
           <button type="button" data-tab="overview" class="${state.tab === 'overview' ? 'is-active' : ''}">Overview</button>
           <button type="button" data-tab="products" class="${state.tab === 'products' ? 'is-active' : ''}">Socks</button>
           <button type="button" data-tab="sales" class="${state.tab === 'sales' ? 'is-active' : ''}">Sales</button>
+          <button type="button" data-tab="coupons" class="${state.tab === 'coupons' ? 'is-active' : ''}">Coupons</button>
           <button type="button" data-tab="orders" class="${state.tab === 'orders' ? 'is-active' : ''}">Orders</button>
           <button type="button" data-tab="settings" class="${state.tab === 'settings' ? 'is-active' : ''}">Credentials</button>
         </nav>
@@ -302,6 +306,25 @@
               <div class="admin-card">
                 <h3>Current sales</h3>
                 ${renderSalesTable()}
+              </div>
+            </div>
+          </section>
+
+          <section class="panel ${state.tab === 'coupons' ? 'is-active' : ''}">
+            <div class="panel-head">
+              <div>
+                <h2>Coupon codes</h2>
+                <p>Create codes customers can enter at checkout for a discount.</p>
+              </div>
+            </div>
+            <div class="admin-grid">
+              <div class="admin-card">
+                <h3>Add coupon</h3>
+                ${renderCouponForm()}
+              </div>
+              <div class="admin-card">
+                <h3>Current coupons</h3>
+                ${renderCouponsTable()}
               </div>
             </div>
           </section>
@@ -508,6 +531,58 @@
                     <div class="row-actions">
                       <button class="btn-admin ghost small" type="button" data-toggle-sale="${escapeHtml(s.id)}">${s.active ? 'Disable' : 'Enable'}</button>
                       <button class="btn-admin danger small" type="button" data-delete-sale="${escapeHtml(s.id)}">Delete</button>
+                    </div>
+                  </td>
+                </tr>`;
+              })
+              .join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  function renderCouponForm() {
+    return `
+      <form class="admin-form" data-coupon-form>
+        <label>Code<input name="code" placeholder="SAVE10" required style="text-transform:uppercase" /></label>
+        <div class="row-2">
+          <label>Type
+            <select name="type">
+              <option value="percent">Percent off</option>
+              <option value="fixed">Fixed amount off</option>
+            </select>
+          </label>
+          <label>Value<input name="value" type="number" min="1" step="0.01" value="10" required /></label>
+        </div>
+        <div class="row-2">
+          <label>Usage limit <span style="font-weight:300">(optional)</span><input name="usageLimit" type="number" min="1" placeholder="Unlimited" /></label>
+          <label>Expires <span style="font-weight:300">(optional)</span><input name="expiresAt" type="datetime-local" /></label>
+        </div>
+        <button class="btn-admin" type="submit">Add coupon</button>
+      </form>`;
+  }
+
+  function renderCouponsTable() {
+    if (!state.coupons.length) return '<p class="empty-hint">No coupons yet.</p>';
+    return `
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Code</th><th>Discount</th><th>Used</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            ${state.coupons
+              .map((c) => {
+                const discount = c.type === 'fixed' ? `$${Number(c.value).toFixed(2)}` : `${c.value}%`;
+                const used = c.usageLimit ? `${c.usedCount || 0} / ${c.usageLimit}` : `${c.usedCount || 0}`;
+                return `
+                <tr>
+                  <td>${escapeHtml(c.code)}</td>
+                  <td>${escapeHtml(discount)}</td>
+                  <td>${escapeHtml(used)}</td>
+                  <td><span class="badge ${c.active ? 'on' : 'off'}">${c.active ? 'Active' : 'Off'}</span></td>
+                  <td>
+                    <div class="row-actions">
+                      <button class="btn-admin ghost small" type="button" data-toggle-coupon="${escapeHtml(c.id)}">${c.active ? 'Disable' : 'Enable'}</button>
+                      <button class="btn-admin danger small" type="button" data-delete-coupon="${escapeHtml(c.id)}">Delete</button>
                     </div>
                   </td>
                 </tr>`;
@@ -827,6 +902,60 @@
             body: JSON.stringify({ ...sale, active: !sale.active })
           });
           state.message = sale.active ? 'Sale disabled.' : 'Sale enabled.';
+          await loadDashboard();
+        } catch (err) {
+          state.error = err.message;
+        }
+        render();
+      });
+    });
+
+    app.querySelector('[data-coupon-form]')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.currentTarget);
+      const payload = {
+        code: fd.get('code'),
+        type: fd.get('type'),
+        value: fd.get('value'),
+        usageLimit: fd.get('usageLimit') || undefined,
+        expiresAt: fd.get('expiresAt') ? new Date(String(fd.get('expiresAt'))).toISOString() : null,
+        active: true
+      };
+      try {
+        await api('/api/coupons', { method: 'POST', body: JSON.stringify(payload) });
+        state.message = 'Coupon added.';
+        state.error = '';
+        await loadDashboard();
+      } catch (err) {
+        state.error = err.message;
+      }
+      render();
+    });
+
+    app.querySelectorAll('[data-delete-coupon]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Remove this coupon?')) return;
+        try {
+          await api(`/api/coupons/${encodeURIComponent(btn.dataset.deleteCoupon)}`, { method: 'DELETE' });
+          state.message = 'Coupon removed.';
+          await loadDashboard();
+        } catch (err) {
+          state.error = err.message;
+        }
+        render();
+      });
+    });
+
+    app.querySelectorAll('[data-toggle-coupon]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const coupon = state.coupons.find((c) => c.id === btn.dataset.toggleCoupon);
+        if (!coupon) return;
+        try {
+          await api(`/api/coupons/${encodeURIComponent(coupon.id)}`, {
+            method: 'PUT',
+            body: JSON.stringify({ ...coupon, active: !coupon.active })
+          });
+          state.message = coupon.active ? 'Coupon disabled.' : 'Coupon enabled.';
           await loadDashboard();
         } catch (err) {
           state.error = err.message;

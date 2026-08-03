@@ -3,7 +3,9 @@
 const { sendJson, readBody, methodNotAllowed } = require('../../lib/http');
 const { requireAdmin } = require('../../lib/auth');
 const { loadDb, saveDb, uid } = require('../../lib/store');
-const { applySales } = require('../../lib/catalog');
+const { applySales, findValidCoupon, computeDiscount } = require('../../lib/catalog');
+const { getCustomerSession } = require('../../lib/customers');
+const { sendOrderConfirmationEmail } = require('../../lib/email');
 
 function getId(req) {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
@@ -65,13 +67,24 @@ module.exports = async function handler(req, res) {
       }
 
       const subtotal = Math.round(lines.reduce((s, l) => s + l.lineTotal, 0) * 100) / 100;
-      const total = Math.round((subtotal + SHIPPING_FEE) * 100) / 100;
+
+      let coupon = null;
+      let discount = 0;
+      if (body.couponCode) {
+        coupon = findValidCoupon(db.coupons, body.couponCode);
+        if (!coupon) return sendJson(res, 400, { error: 'Invalid or expired coupon code' });
+        discount = computeDiscount(coupon, subtotal);
+      }
+
+      const total = Math.round((subtotal - discount + SHIPPING_FEE) * 100) / 100;
+      const customerSession = getCustomerSession(req);
 
       const order = {
         id: uid('ord'),
         createdAt: new Date().toISOString(),
         status: paymentMethod === 'cod' ? 'awaiting_payment' : 'paid',
         paymentMethod,
+        customerId: customerSession?.sub || null,
         shipping: {
           email: String(shipping.email).trim(),
           phone: String(shipping.phone || '').trim(),
@@ -85,6 +98,8 @@ module.exports = async function handler(req, res) {
         },
         items: lines,
         subtotal,
+        couponCode: coupon ? coupon.code : null,
+        discount,
         shippingFee: SHIPPING_FEE,
         total,
         cardLast4:
@@ -95,8 +110,22 @@ module.exports = async function handler(req, res) {
       };
 
       db.orders.unshift(order);
+      if (coupon) {
+        const couponIndex = db.coupons.findIndex((c) => c.id === coupon.id);
+        if (couponIndex !== -1) db.coupons[couponIndex].usedCount = (db.coupons[couponIndex].usedCount || 0) + 1;
+      }
       await saveDb(db);
-      return sendJson(res, 201, { order });
+
+      // Fire the receipt/confirmation email — don't block the response on slow SMTP.
+      let emailStatus = 'skipped';
+      try {
+        const mail = await sendOrderConfirmationEmail({ to: order.shipping.email, order });
+        emailStatus = mail.ok ? 'sent' : 'failed';
+      } catch {
+        emailStatus = 'failed';
+      }
+
+      return sendJson(res, 201, { order, emailStatus });
     }
 
     return methodNotAllowed(res, ['GET', 'POST']);

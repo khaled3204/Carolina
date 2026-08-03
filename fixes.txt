@@ -1,0 +1,18 @@
+fixes 
+main page side butons 
+contact page too big  
+show stocks in the collections page
+
+
+
+
+additions 
+add sending the payment code after paying 
+add pop up after payment compeletion receipt
+add a page to see the ordered items 
+cart goes to zero 0 after succewsful order 
+add sign in sign up for the order history
+add verification code to be sent for signing in 
+or the payment code be sent to the customers email 
+add similar items be loaded after adding something to cart by ai
+add a kupon codes via admin page 

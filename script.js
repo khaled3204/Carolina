@@ -4,6 +4,7 @@
 
 const CART_KEY = 'carolina-cart';
 const CHECKOUT_KEY = 'carolina-checkout';
+const COUPON_KEY = 'carolina-coupon';
 const SHIPPING = 5;
 
 const DEFAULT_PRODUCTS = [
@@ -192,6 +193,33 @@ const writeCheckout = (data) => {
 
 const clearCheckout = () => sessionStorage.removeItem(CHECKOUT_KEY);
 
+const readCoupon = () => {
+  try {
+    const raw = sessionStorage.getItem(COUPON_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+const writeCoupon = (coupon) => sessionStorage.setItem(COUPON_KEY, JSON.stringify(coupon));
+const clearCoupon = () => sessionStorage.removeItem(COUPON_KEY);
+
+// Re-checks a coupon code against the current subtotal (discount can depend on it).
+async function validateCoupon(code, subtotal) {
+  if (!code) return { valid: false, error: 'Enter a coupon code' };
+  try {
+    const res = await fetch(
+      `/api/coupons/validate?code=${encodeURIComponent(code)}&subtotal=${encodeURIComponent(subtotal)}`
+    );
+    const data = await res.json();
+    if (!res.ok || !data.valid) return { valid: false, error: data.error || 'Invalid coupon code' };
+    return data;
+  } catch {
+    return { valid: false, error: 'Could not check coupon — try again' };
+  }
+}
+
 const cartQtyTotal = (items = readCart()) =>
   items.reduce((sum, item) => sum + (item.qty || 0), 0);
 
@@ -324,10 +352,12 @@ const initCollections = () => {
       product.salePrice != null
         ? `<span class="product-price"><s style="opacity:.55;margin-right:6px">${money(product.price)}</s>${money(product.salePrice)}</span>`
         : `<span class="product-price">${money(product.price)}</span>`;
+    const stockHtml = stockBadge(product.stock);
     return `
-    <a class="product-card" href="product.html?item=${encodeURIComponent(product.id)}">
+    <a class="product-card ${product.stock === 0 ? 'is-out-of-stock' : ''}" href="product.html?item=${encodeURIComponent(product.id)}">
       <div class="product-media">
         <img src="${product.images[0]}" alt="${product.name}" loading="lazy" />
+        ${stockHtml}
       </div>
       <div class="product-info">
         <span class="product-name">${product.name}</span>
@@ -336,6 +366,15 @@ const initCollections = () => {
     </a>`;
   }).join('');
 };
+
+/* ---- Stock helper (used on collections + product page) ---- */
+function stockBadge(stock) {
+  const n = Number(stock);
+  if (!Number.isFinite(n)) return '';
+  if (n <= 0) return '<span class="stock-pill out">Out of stock</span>';
+  if (n <= 5) return `<span class="stock-pill low">Only ${n} left</span>`;
+  return '<span class="stock-pill in">In stock</span>';
+}
 
 /* ---- Product detail ---- */
 const initProductDetail = () => {
@@ -394,11 +433,13 @@ const initProductDetail = () => {
           .join('')}</div>`
         : ''
       }
+        <p class="detail-stock">${stockBadge(product.stock)}</p>
         <hr class="divider" />
         <h2>Description</h2>
         <p>${product.description || ''}</p>
-        <button class="btn-gold full" type="button" data-add-to-cart>Add To Cart</button>
-      </div>`;
+        <button class="btn-gold full" type="button" data-add-to-cart ${product.stock === 0 ? 'disabled' : ''}>${product.stock === 0 ? 'Out of stock' : 'Add To Cart'}</button>
+      </div>
+      <div class="related-products" data-related-products></div>`;
 
     root.querySelectorAll('[data-thumb]').forEach((thumb) => {
       thumb.addEventListener('click', () => {
@@ -429,8 +470,50 @@ const initProductDetail = () => {
     });
 
     root.querySelector('[data-add-to-cart]')?.addEventListener('click', () => {
+      if (product.stock === 0) return;
       addToCart(product.id, selectedColor, 1, selectedSize);
+      renderRelated(); // refresh "also added" suggestions after a cart change
     });
+
+    renderRelated();
+  };
+
+  // Lightweight "customers also like" suggestions — picks other in-stock
+  // products, preferring similar price range to the current item.
+  const renderRelated = () => {
+    const relatedRoot = root.querySelector('[data-related-products]');
+    if (!relatedRoot) return;
+
+    const others = PRODUCTS.filter((p) => p.id !== product.id && p.active !== false);
+    const scored = others
+      .map((p) => ({ p, score: Math.abs(unitPrice(p) - unitPrice(product)) }))
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 4)
+      .map((s) => s.p);
+
+    if (!scored.length) {
+      relatedRoot.innerHTML = '';
+      return;
+    }
+
+    relatedRoot.innerHTML = `
+      <h2>You may also like</h2>
+      <div class="related-grid">
+        ${scored
+          .map(
+            (p) => `
+          <a class="product-card" href="product.html?item=${encodeURIComponent(p.id)}">
+            <div class="product-media">
+              <img src="${p.images[0]}" alt="${p.name}" loading="lazy" />
+            </div>
+            <div class="product-info">
+              <span class="product-name">${p.name}</span>
+              <span class="product-price">${money(unitPrice(p))}</span>
+            </div>
+          </a>`
+          )
+          .join('')}
+      </div>`;
   };
 
   render();
@@ -454,7 +537,9 @@ const initCartPage = () => {
     }
 
     const subtotal = cartSubtotal(items);
-    const total = subtotal + SHIPPING;
+    const coupon = readCoupon();
+    const discount = coupon ? coupon.discount : 0;
+    const total = Math.max(0, subtotal - discount) + SHIPPING;
 
     root.innerHTML = `
       <div class="cart-items">
@@ -483,7 +568,14 @@ const initCartPage = () => {
         .join('')}
       </div>
       <div class="summary-box">
+        <div class="coupon-box">
+          <input type="text" data-coupon-input placeholder="Coupon code" value="${coupon ? coupon.code : ''}" />
+          <button type="button" data-coupon-apply class="btn-gold" style="padding:10px 18px;font-size:12px">${coupon ? 'Update' : 'Apply'}</button>
+          ${coupon ? '<button type="button" data-coupon-remove class="cart-remove">Remove</button>' : ''}
+        </div>
+        <p class="coupon-message" data-coupon-message></p>
         <div class="summary-row"><span>Subtotal</span><span>${moneyFixed(subtotal)}</span></div>
+        ${coupon ? `<div class="summary-row"><span>Discount (${coupon.code})</span><span>-${moneyFixed(discount)}</span></div>` : ''}
         <div class="summary-row"><span>Shipping</span><span>${moneyFixed(SHIPPING)}</span></div>
         <div class="summary-row total"><span>Total</span><span>${moneyFixed(total)}</span></div>
         <a href="checkout.html" class="btn-gold">
@@ -494,24 +586,47 @@ const initCartPage = () => {
         </a>
       </div>`;
 
+    root.querySelector('[data-coupon-apply]')?.addEventListener('click', async () => {
+      const input = root.querySelector('[data-coupon-input]');
+      const msg = root.querySelector('[data-coupon-message]');
+      const code = String(input.value || '').trim();
+      msg.textContent = 'Checking…';
+      const result = await validateCoupon(code, cartSubtotal(items));
+      if (!result.valid) {
+        clearCoupon();
+        msg.textContent = result.error || 'Invalid coupon code';
+        return;
+      }
+      writeCoupon(result);
+      render();
+    });
+
+    root.querySelector('[data-coupon-remove]')?.addEventListener('click', () => {
+      clearCoupon();
+      render();
+    });
+
     root.querySelectorAll('.cart-row').forEach((row) => {
       const index = Number(row.dataset.index);
-      row.querySelector('[data-qty-dec]')?.addEventListener('click', () => {
+      row.querySelector('[data-qty-dec]')?.addEventListener('click', async () => {
         const cart = readCart();
         if (cart[index].qty > 1) cart[index].qty -= 1;
         writeCart(cart);
+        await refreshCouponForCart(cart);
         render();
       });
-      row.querySelector('[data-qty-inc]')?.addEventListener('click', () => {
+      row.querySelector('[data-qty-inc]')?.addEventListener('click', async () => {
         const cart = readCart();
         cart[index].qty += 1;
         writeCart(cart);
+        await refreshCouponForCart(cart);
         render();
       });
-      row.querySelector('[data-remove]')?.addEventListener('click', () => {
+      row.querySelector('[data-remove]')?.addEventListener('click', async () => {
         const cart = readCart();
         cart.splice(index, 1);
         writeCart(cart);
+        await refreshCouponForCart(cart);
         render();
       });
     });
@@ -519,6 +634,19 @@ const initCartPage = () => {
 
   render();
 };
+
+// Keeps an applied coupon's discount amount in sync with the current subtotal.
+async function refreshCouponForCart(items) {
+  const coupon = readCoupon();
+  if (!coupon) return;
+  if (!items.length) {
+    clearCoupon();
+    return;
+  }
+  const result = await validateCoupon(coupon.code, cartSubtotal(items));
+  if (result.valid) writeCoupon(result);
+  else clearCoupon();
+}
 
 /* ---- Checkout page ---- */
 const initCheckoutPage = () => {
@@ -538,7 +666,9 @@ const initCheckoutPage = () => {
     }
 
     const subtotal = cartSubtotal(items);
-    const total = subtotal + SHIPPING;
+    const coupon = readCoupon();
+    const discount = coupon ? coupon.discount : 0;
+    const total = Math.max(0, subtotal - discount) + SHIPPING;
     const count = cartQtyTotal(items);
     const saved = readCheckout()?.shipping || {};
 
@@ -596,6 +726,7 @@ const initCheckoutPage = () => {
         })
         .join('')}
         <div class="summary-row"><span>Subtotal</span><span>${moneyFixed(subtotal)}</span></div>
+        ${coupon ? `<div class="summary-row"><span>Discount (${coupon.code})</span><span>-${moneyFixed(discount)}</span></div>` : ''}
         <div class="summary-row"><span>Shipping</span><span>${moneyFixed(SHIPPING)}</span></div>
         <div class="summary-row total"><span>Total</span><span>${moneyFixed(total)}</span></div>
       </aside>`;
@@ -680,7 +811,9 @@ const initPaymentPage = () => {
   let method = 'cod';
   const ship = checkout.shipping;
   const subtotal = cartSubtotal(items);
-  const total = subtotal + SHIPPING;
+  const coupon = readCoupon();
+  const discount = coupon ? coupon.discount : 0;
+  const total = Math.max(0, subtotal - discount) + SHIPPING;
   const count = cartQtyTotal(items);
 
   const render = () => {
@@ -773,6 +906,7 @@ const initPaymentPage = () => {
         })
         .join('')}
         <div class="summary-row"><span>Subtotal</span><span>${moneyFixed(subtotal)}</span></div>
+        ${coupon ? `<div class="summary-row"><span>Discount (${coupon.code})</span><span>-${moneyFixed(discount)}</span></div>` : ''}
         <div class="summary-row"><span>Shipping</span><span>${moneyFixed(SHIPPING)}</span></div>
         <div class="summary-row total"><span>Total</span><span>${moneyFixed(total)}</span></div>
       </aside>`;
@@ -829,7 +963,8 @@ const initPaymentPage = () => {
             })),
             shipping: ship,
             paymentMethod: method,
-            cardLast4
+            cardLast4,
+            couponCode: coupon ? coupon.code : undefined
           })
         });
         const data = await res.json();
@@ -837,18 +972,268 @@ const initPaymentPage = () => {
 
         writeCart([]);
         clearCheckout();
+        clearCoupon();
         root.innerHTML = `
           <div class="payment-success">
             <h1>Thank you</h1>
             <p class="order-id">Order ${data.order.id}</p>
-            <p>We’ve received your order and will be in touch shortly.</p>
+            <p>We've received your order and will be in touch shortly. A receipt has been emailed to ${ship.email}.</p>
             <a href="collections.html" class="btn-gold">Continue shopping</a>
           </div>`;
+        showReceiptModal(data.order);
       } catch (err) {
         showToast(err.message || 'Could not place order');
         btn.disabled = false;
         render();
       }
+    });
+  };
+
+  render();
+};
+
+// Popup shown right after a successful order — a quick visual receipt on top
+// of the inline "Thank you" confirmation.
+function showReceiptModal(order) {
+  const overlay = document.createElement('div');
+  overlay.className = 'receipt-overlay';
+  overlay.innerHTML = `
+    <div class="receipt-modal" role="dialog" aria-modal="true" aria-label="Order receipt">
+      <button type="button" class="receipt-close" aria-label="Close">&times;</button>
+      <h2>Order confirmed</h2>
+      <p class="receipt-code">${order.id}</p>
+      <div class="receipt-items">
+        ${order.items
+          .map(
+            (i) => `
+          <div class="receipt-item">
+            <span>${i.qty} × ${i.name} <small>(${i.color}/${i.size})</small></span>
+            <span>${moneyFixed(i.lineTotal)}</span>
+          </div>`
+          )
+          .join('')}
+      </div>
+      <div class="receipt-totals">
+        <div><span>Subtotal</span><span>${moneyFixed(order.subtotal)}</span></div>
+        ${order.discount ? `<div><span>Discount${order.couponCode ? ` (${order.couponCode})` : ''}</span><span>-${moneyFixed(order.discount)}</span></div>` : ''}
+        <div><span>Shipping</span><span>${moneyFixed(order.shippingFee)}</span></div>
+        <div class="receipt-total-row"><span>Total</span><span>${moneyFixed(order.total)}</span></div>
+      </div>
+      <p class="receipt-note">A copy of this receipt — including your order code — has been emailed to ${order.shipping.email}.</p>
+      <button type="button" class="btn-gold full receipt-continue">Continue shopping</button>
+    </div>`;
+
+  document.body.appendChild(overlay);
+  document.body.style.overflow = 'hidden';
+
+  const close = () => {
+    overlay.remove();
+    document.body.style.overflow = '';
+  };
+
+  overlay.querySelector('.receipt-close')?.addEventListener('click', close);
+  overlay.querySelector('.receipt-continue')?.addEventListener('click', () => {
+    close();
+    window.location.href = 'collections.html';
+  });
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) close();
+  });
+}
+
+/* ---- Account nav (injected into every page's header) ---- */
+const initAccountNav = async () => {
+  const rightContainers = document.querySelectorAll('.header-right');
+  const mobileLists = document.querySelectorAll('.mobile-nav ul');
+  if (!rightContainers.length) return;
+
+  let customer = null;
+  try {
+    const res = await fetch('/api/account/me', { credentials: 'same-origin' });
+    if (res.ok) {
+      const data = await res.json();
+      customer = data.customer;
+    }
+  } catch {
+    /* not signed in / offline — treat as guest */
+  }
+
+  const href = customer ? 'orders.html' : 'account.html';
+  const label = customer ? 'My Orders' : 'Sign In';
+  const userIcon =
+    '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>';
+
+  rightContainers.forEach((el) => {
+    if (el.querySelector('[data-account-link]')) return;
+    const link = document.createElement('a');
+    link.href = href;
+    link.className = 'icon-btn';
+    link.setAttribute('aria-label', label);
+    link.setAttribute('data-account-link', '');
+    link.innerHTML = userIcon;
+    const firstIcon = el.querySelector('.icon-btn, .phone-link');
+    if (firstIcon) el.insertBefore(link, firstIcon);
+    else el.appendChild(link);
+  });
+
+  mobileLists.forEach((ul) => {
+    if (ul.querySelector('[data-account-link]')) return;
+    const li = document.createElement('li');
+    li.innerHTML = `<a href="${href}" data-account-link>${label}</a>`;
+    ul.appendChild(li);
+  });
+};
+
+/* ---- Account page (sign in / sign up via emailed code) ---- */
+const initAccountPage = () => {
+  const root = document.querySelector('[data-account-page]');
+  if (!root) return;
+
+  let stage = 'email'; // email -> code
+  let email = '';
+
+  const render = () => {
+    root.innerHTML =
+      stage === 'email'
+        ? `
+      <form data-request-form>
+        <p class="form-section-label">Sign in with your email</p>
+        <p class="account-lead">We'll email you a 6-digit code — no password needed.</p>
+        <div class="form-grid single">
+          <input type="email" name="email" placeholder="Email" required autocomplete="email" value="${email}" />
+        </div>
+        <button type="submit" class="payment-btn">Send verification code</button>
+        <p class="account-message" data-message></p>
+      </form>`
+        : `
+      <form data-verify-form>
+        <p class="form-section-label">Enter your code</p>
+        <p class="account-lead">Sent to ${email}. It expires in 10 minutes.</p>
+        <div class="form-grid single">
+          <input type="text" name="code" inputmode="numeric" maxlength="6" placeholder="6-digit code" required />
+        </div>
+        <button type="submit" class="payment-btn">Verify & sign in</button>
+        <button type="button" class="link-btn" data-back>Use a different email</button>
+        <p class="account-message" data-message></p>
+      </form>`;
+
+    root.querySelector('[data-request-form]')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.currentTarget);
+      email = String(fd.get('email') || '').trim();
+      const msg = root.querySelector('[data-message]');
+      msg.textContent = 'Sending…';
+      try {
+        const res = await fetch('/api/account/request-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Could not send code');
+        stage = 'code';
+        render();
+        showToast(data.message || 'Code sent — check your inbox');
+        if (data.devCode) showToast(`Dev mode — your code is ${data.devCode}`);
+      } catch (err) {
+        msg.textContent = err.message || 'Could not send code';
+      }
+    });
+
+    root.querySelector('[data-back]')?.addEventListener('click', () => {
+      stage = 'email';
+      render();
+    });
+
+    root.querySelector('[data-verify-form]')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.currentTarget);
+      const code = String(fd.get('code') || '').trim();
+      const msg = root.querySelector('[data-message]');
+      msg.textContent = 'Verifying…';
+      try {
+        const res = await fetch('/api/account/verify-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, code })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Incorrect code');
+        window.location.href = 'orders.html';
+      } catch (err) {
+        msg.textContent = err.message || 'Incorrect code';
+      }
+    });
+  };
+
+  render();
+};
+
+/* ---- Order history page ---- */
+const initOrdersPage = () => {
+  const root = document.querySelector('[data-orders-page]');
+  if (!root) return;
+
+  const render = async () => {
+    root.innerHTML = '<p class="account-lead">Loading your orders…</p>';
+    let me;
+    try {
+      const meRes = await fetch('/api/account/me', { credentials: 'same-origin' });
+      if (!meRes.ok) throw new Error('not signed in');
+      me = (await meRes.json()).customer;
+    } catch {
+      root.innerHTML = `
+        <div class="cart-empty">
+          <p>Sign in to see your order history.</p>
+          <a href="account.html" class="btn-gold">Sign In</a>
+        </div>`;
+      return;
+    }
+
+    let orders = [];
+    try {
+      const res = await fetch('/api/account/orders', { credentials: 'same-origin' });
+      const data = await res.json();
+      orders = data.orders || [];
+    } catch {
+      orders = [];
+    }
+
+    root.innerHTML = `
+      <div class="orders-head">
+        <p>Signed in as <strong>${me.email}</strong></p>
+        <button type="button" class="link-btn" data-sign-out>Sign out</button>
+      </div>
+      ${
+        orders.length
+          ? orders
+              .map(
+                (o) => `
+        <div class="order-history-card">
+          <div class="order-history-top">
+            <span class="order-history-id">${o.id}</span>
+            <span class="order-history-status">${o.status.replace('_', ' ')}</span>
+          </div>
+          <p class="order-history-date">${(o.createdAt || '').slice(0, 10)} · ${o.paymentMethod}</p>
+          ${o.items
+            .map(
+              (i) => `<div class="order-history-item"><span>${i.qty} × ${i.name} (${i.color}/${i.size})</span><span>${moneyFixed(i.lineTotal)}</span></div>`
+            )
+            .join('')}
+          <div class="order-history-total"><span>Total</span><span>${moneyFixed(o.total)}</span></div>
+        </div>`
+              )
+              .join('')
+          : '<div class="cart-empty"><p>No orders yet.</p><a href="collections.html" class="btn-gold">GO TO SHOP</a></div>'
+      }`;
+
+    root.querySelector('[data-sign-out]')?.addEventListener('click', async () => {
+      try {
+        await fetch('/api/account/logout', { method: 'POST' });
+      } catch {
+        /* ignore */
+      }
+      window.location.href = 'index.html';
     });
   };
 
@@ -906,12 +1291,15 @@ const initContactForm = () => {
 document.addEventListener('DOMContentLoaded', async () => {
   await loadCatalog();
   initMobileNav();
+  initAccountNav();
   initHero();
   initCollections();
   initProductDetail();
   initCartPage();
   initCheckoutPage();
   initPaymentPage();
+  initAccountPage();
+  initOrdersPage();
   initContactForm();
   updateCartBadge();
 });

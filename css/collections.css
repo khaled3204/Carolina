@@ -23,11 +23,43 @@
 }
 
 .product-card .product-media {
+  position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
   overflow: hidden;
   background: var(--placeholder);
   border: 1px solid var(--line);
+}
+
+.product-card.is-out-of-stock {
+  opacity: 0.6;
+}
+
+.stock-pill {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-family: var(--font-nav);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  padding: 3px 10px;
+  border-radius: 999px;
+  z-index: 2;
+}
+
+.stock-pill.in {
+  background: #e7f3e8;
+  color: #2e7d32;
+}
+
+.stock-pill.low {
+  background: #fbeecb;
+  color: #8c6d45;
+}
+
+.stock-pill.out {
+  background: #f5e2e2;
+  color: #a33a3a;
 }
 
 .product-card img {
