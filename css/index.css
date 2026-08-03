@@ -44,7 +44,7 @@
   height: 38px;
   border-radius: 50%;
   border: 1px solid var(--ink);
-  background: rgba(255, 255, 255, 0.92);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
   color: var(--ink);
   display: flex;
   align-items: center;
@@ -151,3 +151,29 @@
     margin-top: 36px;
   }
 }
+
+html[dir='rtl'] .hero-arrow.prev {
+  left: auto;
+  right: -19px;
+}
+
+html[dir='rtl'] .hero-arrow.next {
+  right: auto;
+  left: -19px;
+}
+
+html[dir='rtl'] .hero-arrow.prev svg,
+html[dir='rtl'] .hero-arrow.next svg {
+  transform: scaleX(-1);
+}
+
+@media (max-width: 900px) {
+  html[dir='rtl'] .hero-arrow.prev {
+    right: 4px;
+  }
+
+  html[dir='rtl'] .hero-arrow.next {
+    left: 4px;
+  }
+}
+

@@ -5,14 +5,19 @@
 @import url('base.css');
 
 .page-contact {
-  background: #ffffff;
+  background: var(--white);
   --contact-gold: #cfa44b;
   --contact-gray: #d9d9d9;
-  --contact-ink: #000000;
-  --contact-muted: rgba(0, 0, 0, 0.5);
-  --contact-placeholder: rgba(0, 0, 0, 0.62);
+  --contact-ink: var(--ink);
+  --contact-muted: color-mix(in srgb, var(--ink) 50%, transparent);
+  --contact-placeholder: color-mix(in srgb, var(--ink) 62%, transparent);
   --contact-frame: 1440px;
   --contact-gutter: 80px;
+}
+
+html[data-theme='dark'] .page-contact {
+  --contact-gold: #d4b06e;
+  --contact-gray: #3d372f;
 }
 
 .page-contact .site-header {
@@ -194,7 +199,7 @@
   min-height: 0;
   margin: 0 auto;
   padding: 36px 32px 40px;
-  background: #ffffff;
+  background: var(--surface);
   border: 1px solid var(--contact-gold);
 }
 
@@ -249,7 +254,7 @@
 .contact-form-grid textarea {
   box-sizing: border-box;
   border: 1px solid #cccccc;
-  background: #ffffff;
+  background: var(--surface);
   padding: 0 16px;
   font-family: Arial, Helvetica, sans-serif;
   font-size: 14px;

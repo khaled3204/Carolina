@@ -7,6 +7,11 @@ const CHECKOUT_KEY = 'carolina-checkout';
 const COUPON_KEY = 'carolina-coupon';
 const SHIPPING = 5;
 
+const t = (key, vars) =>
+  (window.CarolinaI18n && typeof window.CarolinaI18n.t === 'function'
+    ? window.CarolinaI18n.t(key, vars)
+    : key);
+
 const DEFAULT_PRODUCTS = [
   {
     id: 'sheer-polka-black',
@@ -207,16 +212,16 @@ const clearCoupon = () => sessionStorage.removeItem(COUPON_KEY);
 
 // Re-checks a coupon code against the current subtotal (discount can depend on it).
 async function validateCoupon(code, subtotal) {
-  if (!code) return { valid: false, error: 'Enter a coupon code' };
+  if (!code) return { valid: false, error: t('coupon.enter') };
   try {
     const res = await fetch(
       `/api/coupons/validate?code=${encodeURIComponent(code)}&subtotal=${encodeURIComponent(subtotal)}`
     );
     const data = await res.json();
-    if (!res.ok || !data.valid) return { valid: false, error: data.error || 'Invalid coupon code' };
+    if (!res.ok || !data.valid) return { valid: false, error: data.error || t('coupon.invalid') };
     return data;
   } catch {
-    return { valid: false, error: 'Could not check coupon — try again' };
+    return { valid: false, error: t('coupon.checkFail') };
   }
 }
 
@@ -264,7 +269,7 @@ const addToCart = (id, color, qty = 1, size = null) => {
     items.push({ id, color, size: chosenSize, qty });
   }
   writeCart(items);
-  showToast('Added to cart');
+  showToast(t('toast.added'));
 };
 
 async function loadCatalog() {
@@ -293,7 +298,7 @@ const initMobileNav = () => {
   menuToggle.addEventListener('click', () => {
     const open = mobileNav.classList.toggle('open');
     menuToggle.setAttribute('aria-expanded', String(open));
-    menuToggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    menuToggle.setAttribute('aria-label', open ? t('nav.closeMenu') : t('nav.openMenu'));
   });
 };
 
@@ -371,9 +376,9 @@ const initCollections = () => {
 function stockBadge(stock) {
   const n = Number(stock);
   if (!Number.isFinite(n)) return '';
-  if (n <= 0) return '<span class="stock-pill out">Out of stock</span>';
-  if (n <= 5) return `<span class="stock-pill low">Only ${n} left</span>`;
-  return '<span class="stock-pill in">In stock</span>';
+  if (n <= 0) return `<span class="stock-pill out">${t('stock.out')}</span>`;
+  if (n <= 5) return `<span class="stock-pill low">${t('stock.low', { n })}</span>`;
+  return `<span class="stock-pill in">${t('stock.in')}</span>`;
 }
 
 /* ---- Product detail ---- */

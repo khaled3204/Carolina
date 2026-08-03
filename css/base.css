@@ -2,9 +2,10 @@
    CAROLINA — shared base (imported by every page stylesheet)
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Cormorant+Garamond:wght@500;600&family=Cormorant+SC:wght@500&family=Jost:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Cormorant+Garamond:wght@500;600&family=Cormorant+SC:wght@500&family=Jost:wght@300;400;500;600&family=Cairo:wght@300;400;500;600;700&display=swap');
 
-:root {
+:root,
+html[data-theme='light'] {
   --ink: #1a1a1a;
   --ink-soft: #5c564e;
   --gold: #c9a15c;
@@ -15,10 +16,41 @@
   --placeholder: #ececec;
   --placeholder-ink: #9a9a9a;
   --white: #ffffff;
+  --surface: #ffffff;
+  --surface-muted: #faf8f4;
+  --overlay: rgba(26, 26, 26, 0.55);
   --font-display: 'Playfair Display', Georgia, serif;
   --font-nav: 'Cormorant Garamond', Georgia, serif;
   --font-body: 'Jost', Arial, sans-serif;
   --container: 1180px;
+  color-scheme: light;
+}
+
+html[data-theme='dark'] {
+  --ink: #f3efe6;
+  --ink-soft: #b7b0a4;
+  --gold: #d4b06e;
+  --gold-dark: #e0c288;
+  --cream: #2a2620;
+  --cream-deep: #221e19;
+  --line: #3d372f;
+  --placeholder: #2f2b25;
+  --placeholder-ink: #8a8478;
+  --white: #161410;
+  --surface: #1c1914;
+  --surface-muted: #12100d;
+  --overlay: rgba(0, 0, 0, 0.72);
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-nav: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'Jost', Arial, sans-serif;
+  color-scheme: dark;
+}
+
+html[lang='ar'],
+html[lang='ar'] body {
+  --font-display: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+  --font-nav: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+  --font-body: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
 }
 
 *,
@@ -38,6 +70,7 @@ body {
   background: var(--white);
   font-weight: 300;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 img {
@@ -157,9 +190,93 @@ button {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 22px;
+  gap: 14px;
   flex: 1;
   min-width: 0;
+}
+
+.prefs-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.prefs-group {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.prefs-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: var(--font-nav);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.prefs-btn + .prefs-btn {
+  border-inline-start: 1px solid var(--line);
+}
+
+.prefs-btn.is-active {
+  background: var(--cream);
+  color: var(--ink);
+}
+
+.prefs-btn:hover {
+  color: var(--ink);
+}
+
+.prefs-btn svg {
+  display: block;
+}
+
+html[data-theme='dark'] .logo-mark,
+html[data-theme='dark'] .icon-btn img,
+html[data-theme='dark'] .phone-link img,
+html[data-theme='dark'] .contact-info-icon img {
+  filter: invert(1) brightness(1.08);
+}
+
+html[dir='rtl'] .menu-toggle {
+  margin-right: 0;
+  margin-left: 40px;
+}
+
+html[dir='rtl'] .whatsapp-float {
+  left: auto;
+  right: 26px;
+}
+
+html[dir='rtl'] .toast {
+  right: auto;
+  left: 24px;
+}
+
+html[dir='rtl'] .receipt-close {
+  right: auto;
+  left: 14px;
+}
+
+html[dir='rtl'] .back-link svg,
+html[dir='rtl'] .btn-gold svg,
+html[dir='rtl'] .payment-btn svg,
+html[dir='rtl'] .place-order-btn svg {
+  transform: scaleX(-1);
+}
+
+.mobile-nav .prefs-controls {
+  padding: 10px 0 4px;
 }
 
 .icon-btn {
@@ -355,7 +472,7 @@ button {
 .receipt-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(26, 26, 26, 0.55);
+  background: var(--overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -482,7 +599,11 @@ button {
   }
 
   .header-right {
-    gap: 12px;
+    gap: 10px;
+  }
+
+  .header-right > .prefs-controls {
+    display: none;
   }
 
   .logo-mark {
