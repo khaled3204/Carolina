@@ -954,6 +954,7 @@ const initPaymentPage = () => {
         const res = await fetch('/api/orders', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
           body: JSON.stringify({
             items: items.map((item) => ({
               id: item.id,
@@ -967,8 +968,13 @@ const initPaymentPage = () => {
             couponCode: coupon ? coupon.code : undefined
           })
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Order failed');
+        let data = {};
+        try {
+          data = await res.json();
+        } catch {
+          data = {};
+        }
+        if (!res.ok) throw new Error(data.error || `Order failed (${res.status})`);
 
         writeCart([]);
         clearCheckout();

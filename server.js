@@ -28,21 +28,27 @@ function loadHandler(relPath) {
   return require(full);
 }
 
+function loadLibApi(name) {
+  const full = path.join(ROOT, 'lib', 'api', name);
+  delete require.cache[require.resolve(full)];
+  return require(full);
+}
+
 async function routeApi(req, res, pathname) {
   const map = [
-    [/^\/api\/auth\/[^/]+\/?$/, 'auth/[action].js'],
-    [/^\/api\/account\/[^/]+\/?$/, 'account/[action].js'],
-    [/^\/api\/products(\/.*)?\/?$/, 'products/[[...id]].js'],
-    [/^\/api\/sales(\/.*)?\/?$/, 'sales/[[...id]].js'],
-    [/^\/api\/coupons(\/.*)?\/?$/, 'coupons/[[...id]].js'],
-    [/^\/api\/orders(\/.*)?\/?$/, 'orders/[[...id]].js'],
-    [/^\/api\/contact\/?$/, 'contact.js'],
-    [/^\/api\/upload\/?$/, 'upload.js']
+    [/^\/api\/auth\/[^/]+\/?$/, () => loadHandler('auth/[action].js')],
+    [/^\/api\/account\/[^/]+\/?$/, () => loadHandler('account/[action].js')],
+    [/^\/api\/products(\/.*)?\/?$/, () => loadLibApi('products.js')],
+    [/^\/api\/sales(\/.*)?\/?$/, () => loadLibApi('sales.js')],
+    [/^\/api\/coupons(\/.*)?\/?$/, () => loadLibApi('coupons.js')],
+    [/^\/api\/orders(\/.*)?\/?$/, () => loadLibApi('orders.js')],
+    [/^\/api\/contact\/?$/, () => loadHandler('contact.js')],
+    [/^\/api\/upload\/?$/, () => loadHandler('upload.js')]
   ];
 
-  for (const [re, file] of map) {
+  for (const [re, load] of map) {
     if (re.test(pathname)) {
-      const handler = loadHandler(file);
+      const handler = load();
       return handler(req, res);
     }
   }

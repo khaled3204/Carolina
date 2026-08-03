@@ -430,7 +430,7 @@
           </div>
           <label>Or paste image URL
             <div class="url-add-row">
-              <input type="url" data-image-url-input placeholder="https://… or images/products/…" />
+              <input type="text" data-image-url-input placeholder="https://… or images/products/…" />
               <button type="button" class="btn-admin ghost small" data-add-image-url>Add</button>
             </div>
           </label>
