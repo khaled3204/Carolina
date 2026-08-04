@@ -19,6 +19,7 @@
     editingId: null,
     message: '',
     error: '',
+    expandedOrders: new Set(),
     resetToken: new URLSearchParams(location.search).get('reset') || ''
   };
 
@@ -595,16 +596,55 @@
 
   function renderOrdersTable(orders) {
     if (!orders.length) return '<p class="empty-hint">No orders yet.</p>';
+    const itemCount = (o) => (o.items || []).reduce((sum, i) => sum + (Number(i.qty) || 0), 0);
     return `
       <div class="table-wrap">
         <table class="admin-table">
           <thead>
-            <tr><th>Order</th><th>Customer</th><th>Payment</th><th>Total</th><th>Date</th><th></th></tr>
+            <tr><th>Order</th><th>Customer</th><th>Items</th><th>Payment</th><th>Total</th><th>Date</th><th></th></tr>
           </thead>
           <tbody>
             ${orders
               .map((o) => {
                 const name = `${o.shipping?.firstName || ''} ${o.shipping?.lastName || ''}`.trim();
+                const isOpen = state.expandedOrders.has(o.id);
+                const detailRow = isOpen
+                  ? `
+                <tr class="order-detail-row">
+                  <td colspan="7">
+                    <div class="order-detail">
+                      <div class="order-detail-cols">
+                        <div>
+                          <h4>Items</h4>
+                          ${(o.items || [])
+                            .map(
+                              (i) => `
+                            <div class="order-detail-item">
+                              <span>${i.qty} × ${escapeHtml(i.name)} <span style="color:var(--ink-soft)">(${escapeHtml(i.color || '')}/${escapeHtml(i.size || '')})</span></span>
+                              <span>${money(i.lineTotal)}</span>
+                            </div>`
+                            )
+                            .join('')}
+                          <div class="order-detail-item"><span>Subtotal</span><span>${money(o.subtotal)}</span></div>
+                          ${o.couponCode ? `<div class="order-detail-item"><span>Coupon (${escapeHtml(o.couponCode)})</span><span>-${money(o.discount)}</span></div>` : ''}
+                          <div class="order-detail-item"><span>Shipping</span><span>${money(o.shippingFee)}</span></div>
+                          <div class="order-detail-item" style="font-weight:700"><span>Total</span><span>${money(o.total)}</span></div>
+                        </div>
+                        <div>
+                          <h4>Shipping to</h4>
+                          <p>${escapeHtml(name)}</p>
+                          <p>${escapeHtml(o.shipping?.address || '')}</p>
+                          <p>${escapeHtml(o.shipping?.city || '')} ${escapeHtml(o.shipping?.postal || '')}</p>
+                          <p>${escapeHtml(o.shipping?.region || '')} ${escapeHtml(o.shipping?.country || '')}</p>
+                          <p>${escapeHtml(o.shipping?.email || '')}</p>
+                          <p>${escapeHtml(o.shipping?.phone || '')}</p>
+                          ${o.note ? `<h4>Note</h4><p>${escapeHtml(o.note)}</p>` : ''}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>`
+                  : '';
                 return `
                 <tr>
                   <td>
@@ -615,13 +655,15 @@
                     <div>${escapeHtml(name)}</div>
                     <div style="color:var(--ink-soft);font-size:11px">${escapeHtml(o.shipping?.email || '')}</div>
                   </td>
+                  <td>${itemCount(o)}</td>
                   <td>${escapeHtml(o.paymentMethod || '')}${o.cardLast4 ? ` ·•••${escapeHtml(o.cardLast4)}` : ''}</td>
                   <td>${money(o.total)}</td>
                   <td>${escapeHtml((o.createdAt || '').slice(0, 16).replace('T', ' '))}</td>
                   <td>
+                    <button class="btn-admin ghost small" type="button" data-toggle-order="${escapeHtml(o.id)}">${isOpen ? 'Hide' : 'View'}</button>
                     <button class="btn-admin danger small" type="button" data-delete-order="${escapeHtml(o.id)}">Remove</button>
                   </td>
-                </tr>`;
+                </tr>${detailRow}`;
               })
               .join('')}
           </tbody>
@@ -960,6 +1002,15 @@
         } catch (err) {
           state.error = err.message;
         }
+        render();
+      });
+    });
+
+    app.querySelectorAll('[data-toggle-order]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.toggleOrder;
+        if (state.expandedOrders.has(id)) state.expandedOrders.delete(id);
+        else state.expandedOrders.add(id);
         render();
       });
     });

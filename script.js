@@ -658,6 +658,10 @@ const initCheckoutPage = () => {
   const root = document.querySelector('[data-checkout-page]');
   if (!root) return;
 
+  // If the shopper is signed in, prefill the email so the order links up
+  // with their account automatically (order history matches by email).
+  let signedInEmail = '';
+
   const render = () => {
     const items = readCart();
 
@@ -683,7 +687,7 @@ const initCheckoutPage = () => {
         <form data-checkout-form>
           <p class="form-section-label">Contact Info</p>
           <div class="form-grid single">
-            <input type="email" name="email" placeholder="Email" autocomplete="email" value="${saved.email || ''}" required />
+            <input type="email" name="email" placeholder="Email" autocomplete="email" value="${saved.email || signedInEmail || ''}" required />
             <input type="tel" name="phone" placeholder="Phone" autocomplete="tel" value="${saved.phone || ''}" />
           </div>
 
@@ -768,6 +772,19 @@ const initCheckoutPage = () => {
   };
 
   render();
+
+  fetch('/api/account/me', { credentials: 'same-origin' })
+    .then((res) => (res.ok ? res.json() : null))
+    .then((data) => {
+      if (data?.customer?.email) {
+        signedInEmail = data.customer.email;
+        // Only re-render if the shopper hasn't already typed/saved a different email.
+        if (!readCheckout()?.shipping?.email) render();
+      }
+    })
+    .catch(() => {
+      /* not signed in / offline — leave the field blank */
+    });
 };
 
 /* ---- Payment page ---- */
