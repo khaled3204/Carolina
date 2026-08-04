@@ -75,11 +75,13 @@ async function handleOrders(req, res) {
   const auth = await requireCustomer(req);
   if (!auth.ok) return sendJson(res, auth.status, { error: auth.error });
 
-  const db = await loadDb();
+  const db = await loadDb({ fresh: true });
   const email = String(auth.session.email || '').toLowerCase();
-  const orders = (db.orders || []).filter(
-    (o) => String(o.shipping?.email || '').toLowerCase() === email
-  );
+  const customerId = auth.session.sub;
+  const orders = (db.orders || []).filter((o) => {
+    const orderEmail = String(o.shipping?.email || '').toLowerCase();
+    return o.customerId === customerId || orderEmail === email;
+  });
   return sendJson(res, 200, { orders });
 }
 

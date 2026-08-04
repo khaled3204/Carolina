@@ -47,7 +47,7 @@ async function handleMe(req, res) {
   const auth = await requireAdmin(req);
   if (!auth.ok) return sendJson(res, auth.status, { error: auth.error });
 
-  const db = await loadDb();
+  const db = await loadDb({ fresh: true });
   return sendJson(res, 200, {
     ok: true,
     username: db.credentials.username,

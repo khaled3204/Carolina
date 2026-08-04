@@ -334,7 +334,7 @@
             <div class="panel-head">
               <div>
                 <h2>Orders</h2>
-                <p>Customer purchases from the payment page. Remove if needed.</p>
+                <p>${state.orders.length} order${state.orders.length === 1 ? '' : 's'} · click View for full details (items, quantities, shipping).</p>
               </div>
             </div>
             <div class="admin-card">${renderOrdersTable(state.orders)}</div>
@@ -597,7 +597,14 @@
   function renderOrdersTable(orders) {
     if (!orders.length) return '<p class="empty-hint">No orders yet.</p>';
     const itemCount = (o) => (o.items || []).reduce((sum, i) => sum + (Number(i.qty) || 0), 0);
+    const totalPairs = orders.reduce((sum, o) => sum + itemCount(o), 0);
+    const revenue = orders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
     return `
+      <div class="order-summary-bar" style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:16px;font-family:var(--font-nav);font-size:14px;color:var(--ink-soft)">
+        <span><strong style="color:var(--ink)">${orders.length}</strong> orders</span>
+        <span><strong style="color:var(--ink)">${totalPairs}</strong> items sold</span>
+        <span><strong style="color:var(--ink)">${money(revenue)}</strong> revenue</span>
+      </div>
       <div class="table-wrap">
         <table class="admin-table">
           <thead>
@@ -615,7 +622,7 @@
                     <div class="order-detail">
                       <div class="order-detail-cols">
                         <div>
-                          <h4>Items</h4>
+                          <h4>Items (${itemCount(o)})</h4>
                           ${(o.items || [])
                             .map(
                               (i) => `
@@ -639,6 +646,9 @@
                           <p>${escapeHtml(o.shipping?.email || '')}</p>
                           <p>${escapeHtml(o.shipping?.phone || '')}</p>
                           ${o.note ? `<h4>Note</h4><p>${escapeHtml(o.note)}</p>` : ''}
+                          <h4>Payment</h4>
+                          <p>${escapeHtml(o.paymentMethod || '')}${o.cardLast4 ? ` ·•••${escapeHtml(o.cardLast4)}` : ''}</p>
+                          <p>Status: ${escapeHtml(o.status || '')}</p>
                         </div>
                       </div>
                     </div>
@@ -836,8 +846,8 @@
       }
       const payload = {
         name: fd.get('name'),
-        price: fd.get('price'),
-        stock: fd.get('stock'),
+        price: Number(fd.get('price')),
+        stock: fd.get('stock') === '' || fd.get('stock') == null ? undefined : Number(fd.get('stock')),
         sizes: String(fd.get('sizes') || '')
           .split(',')
           .map((s) => s.trim())
@@ -1033,8 +1043,8 @@
 
     app.querySelector('[data-credentials-form]')?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const form = e.currentTarget;
-      const fd = new FormData(form);
+      const form = e.target instanceof HTMLFormElement ? e.target : e.target?.closest?.('form');
+      const fd = new FormData(form || e.currentTarget);
       try {
         const res = await api('/api/auth/credentials', {
           method: 'PUT',
@@ -1049,7 +1059,6 @@
         state.user = { username: res.username, email: res.email };
         state.message = 'Credentials updated.';
         state.error = '';
-        form.reset();
       } catch (err) {
         state.error = err.message;
         state.message = '';

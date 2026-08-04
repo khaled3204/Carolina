@@ -52,9 +52,18 @@ Open:
 | `SITE_URL` | Your live URL, e.g. `https://carolina.vercel.app` |
 | `GMAIL_USER` | `shop.carolina.eg@gmail.com` |
 | `GMAIL_APP_PASSWORD` | Gmail [App Password](https://myaccount.google.com/apppasswords) |
-| `BLOB_READ_WRITE_TOKEN` | (Recommended) Vercel Blob token so products/sales persist across deploys |
+| `BLOB_READ_WRITE_TOKEN` | **Required on Vercel** — Blob token so products, stock, orders, and passwords persist |
 
 3. Deploy. Visit `/admin` on your domain.
+
+### Why orders / stock disappear
+
+This project does **not** use MySQL or XAMPP. Data is stored as JSON:
+
+- Locally → `data/db.json`
+- On Vercel → **Vercel Blob** (via `BLOB_READ_WRITE_TOKEN`)
+
+Vercel’s filesystem is temporary. If `BLOB_READ_WRITE_TOKEN` is missing, every deploy or cold start can wipe products, stock changes, and orders. You do **not** need MySQL — you need the Blob token set in Vercel Environment Variables, then redeploy.
 
 ### Gmail app password
 
@@ -64,6 +73,8 @@ Open:
 4. Paste it into `GMAIL_APP_PASSWORD` on Vercel
 
 Without `GMAIL_APP_PASSWORD`, forgot-password still works in development and can return a reset link in the API response when `EXPOSE_RESET_LINK=1`.
+
+Verification emails sometimes land in spam when sent from Gmail SMTP — ask customers to check Spam/Promotions and mark as “Not spam”. A custom domain with SPF/DKIM later will improve deliverability.
 
 ### Durable storage
 

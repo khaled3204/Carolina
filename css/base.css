@@ -184,6 +184,11 @@ button {
   height: 96px;
   width: auto;
   display: block;
+  /* Keep gold mark in dark mode — browsers must not invert / recolor this SVG */
+  filter: none !important;
+  -webkit-filter: none !important;
+  forced-color-adjust: none;
+  color-scheme: only light;
 }
 
 .header-right {
@@ -245,6 +250,12 @@ html[data-theme='dark'] .icon-btn img,
 html[data-theme='dark'] .phone-link img,
 html[data-theme='dark'] .contact-info-icon img {
   filter: invert(1) brightness(1.08);
+}
+
+html[data-theme='dark'] .logo-mark,
+html[data-theme='dark'] .logo img {
+  filter: none !important;
+  -webkit-filter: none !important;
 }
 
 html[dir='rtl'] .menu-toggle {
