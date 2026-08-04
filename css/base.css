@@ -241,7 +241,6 @@ button {
   display: block;
 }
 
-html[data-theme='dark'] .logo-mark,
 html[data-theme='dark'] .icon-btn img,
 html[data-theme='dark'] .phone-link img,
 html[data-theme='dark'] .contact-info-icon img {

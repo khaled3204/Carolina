@@ -982,7 +982,8 @@
 
     app.querySelector('[data-credentials-form]')?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const fd = new FormData(e.currentTarget);
+      const form = e.currentTarget;
+      const fd = new FormData(form);
       try {
         const res = await api('/api/auth/credentials', {
           method: 'PUT',
@@ -997,7 +998,7 @@
         state.user = { username: res.username, email: res.email };
         state.message = 'Credentials updated.';
         state.error = '';
-        e.currentTarget.reset();
+        form.reset();
       } catch (err) {
         state.error = err.message;
         state.message = '';
