@@ -32,7 +32,8 @@ module.exports = async function handler(req, res) {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
         'x-vercel-blob-access': 'private',
-        'x-vercel-blob-allow-overwrite': 'true'
+        'x-vercel-blob-allow-overwrite': 'true',
+        'x-add-random-suffix': '0'
       },
       body: JSON.stringify({ marker, at: new Date().toISOString() })
     });
@@ -70,16 +71,18 @@ module.exports = async function handler(req, res) {
   }
 
   // Step 2b: try reading directly via the predictable store URL (no list() needed)
-  const storeId = process.env.BLOB_STORE_ID;
-  if (storeId) {
+  const rawStoreId = process.env.BLOB_STORE_ID;
+  if (rawStoreId) {
     try {
-      const directUrl = `https://${storeId}.private.blob.vercel-storage.com/${TEST_PATHNAME}?cache=0`;
+      const sub = rawStoreId.replace(/^store_/i, '').toLowerCase();
+      const directUrl = `https://${sub}.private.blob.vercel-storage.com/${TEST_PATHNAME}?cache=0`;
       const directRes = await fetch(directUrl, { cache: 'no-store' });
       const directBody = await directRes.text();
       report.steps.push({
         step: 'read_direct_store_url',
         ok: directRes.ok,
         status: directRes.status,
+        url: directUrl,
         matchesJustWritten: directBody.includes(marker),
         body: directBody.slice(0, 300)
       });
