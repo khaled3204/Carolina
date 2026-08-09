@@ -1,7 +1,11 @@
 {
   "rewrites": [
     { "source": "/admin", "destination": "/admin/index.html" },
-    { "source": "/admin/", "destination": "/admin/index.html" }
+    { "source": "/admin/", "destination": "/admin/index.html" },
+    { "source": "/api/products/:id", "destination": "/api/products?id=:id" },
+    { "source": "/api/orders/:id", "destination": "/api/orders?id=:id" },
+    { "source": "/api/sales/:id", "destination": "/api/sales?id=:id" },
+    { "source": "/api/coupons/:id", "destination": "/api/coupons?id=:id" }
   ],
   "headers": [
     {
