@@ -76,7 +76,7 @@ module.exports = async function handler(req, res) {
     try {
       const sub = rawStoreId.replace(/^store_/i, '').toLowerCase();
       const directUrl = `https://${sub}.private.blob.vercel-storage.com/${TEST_PATHNAME}?cache=0`;
-      const directRes = await fetch(directUrl, { cache: 'no-store' });
+      const directRes = await fetch(directUrl, { cache: 'no-store', headers: { Authorization: `Bearer ${token}` } });
       const directBody = await directRes.text();
       report.steps.push({
         step: 'read_direct_store_url',
@@ -100,7 +100,7 @@ module.exports = async function handler(req, res) {
 
   // Step 3: read it back the OLD way (no cache-busting) — may show stale/cached data
   try {
-    const res1 = await fetch(blobUrl, { cache: 'no-store' });
+    const res1 = await fetch(blobUrl, { cache: 'no-store', headers: { Authorization: `Bearer ${token}` } });
     const body1 = await res1.text();
     report.steps.push({
       step: 'read_cached_url',
@@ -116,7 +116,7 @@ module.exports = async function handler(req, res) {
   // Step 4: read it back with cache=0 (the fix) — should always match
   try {
     const freshUrl = `${blobUrl}${blobUrl.includes('?') ? '&' : '?'}cache=0`;
-    const res2 = await fetch(freshUrl, { cache: 'no-store' });
+    const res2 = await fetch(freshUrl, { cache: 'no-store', headers: { Authorization: `Bearer ${token}` } });
     const body2 = await res2.text();
     report.steps.push({
       step: 'read_fresh_url',
