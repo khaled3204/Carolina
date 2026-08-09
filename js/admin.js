@@ -76,10 +76,18 @@
         const me = await api('/api/auth/me');
         state.user = { username: me.username, email: me.email };
         state.view = 'dashboard';
-        await loadDashboard();
       } catch {
         setToken('');
         state.view = 'login';
+        render();
+        return;
+      }
+      try {
+        await loadDashboard();
+      } catch (err) {
+        // Don't sign the admin out just because one dashboard call hiccuped —
+        // show what went wrong and let them retry instead of bouncing to login.
+        state.error = err.message || 'Could not load data. Check your connection and try again.';
       }
     }
     render();
