@@ -20,6 +20,32 @@ html[data-theme='dark'] .page-contact {
   --contact-gray: #3d372f;
 }
 
+/* The default hero photo is shot on a near-white backdrop, so in dark mode
+   we swap in a black-backdrop version and force the hero copy to a bright,
+   clearly-readable white instead of the theme's usual --ink. */
+html[data-theme='dark'] .contact-hero-band {
+  background-image: url('../images/dark-contact-hero.png');
+}
+
+html[data-theme='dark'] .contact-hero-content h1 {
+  color: #ffffff;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.5);
+}
+
+html[data-theme='dark'] .contact-hero-text {
+  color: rgba(255, 255, 255, 0.88);
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.5);
+}
+
+html[data-theme='dark'] .page-contact .main-nav a {
+  color: #ffffff;
+}
+
+html[data-theme='dark'] .page-contact .main-nav a:hover,
+html[data-theme='dark'] .page-contact .main-nav a[aria-current="page"] {
+  color: var(--contact-gold);
+}
+
 .page-contact .site-header {
   max-width: var(--contact-frame);
   margin: 0 auto;
@@ -300,6 +326,49 @@ html[data-theme='dark'] .page-contact {
 
 .contact-submit:hover {
   opacity: 0.92;
+}
+
+/* Arabic renders visually smaller than Latin text at the same px size, so
+   bump everything up a little on this page when Arabic is active. */
+html[lang='ar'] .page-contact .contact-eyebrow {
+  font-size: 18px;
+}
+
+html[lang='ar'] .page-contact .contact-hero-content h1 {
+  font-size: 54px;
+}
+
+html[lang='ar'] .page-contact .contact-hero-text {
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+html[lang='ar'] .page-contact .contact-info-item h3 {
+  font-size: 19px;
+}
+
+html[lang='ar'] .page-contact .contact-info-item p,
+html[lang='ar'] .page-contact .contact-info-item:first-child p {
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+html[lang='ar'] .page-contact .contact-form-box h2 {
+  font-size: 28px;
+}
+
+html[lang='ar'] .page-contact .contact-form-grid input,
+html[lang='ar'] .page-contact .contact-form-grid textarea {
+  font-size: 16px;
+}
+
+html[lang='ar'] .page-contact .contact-form-grid input::placeholder,
+html[lang='ar'] .page-contact .contact-form-grid textarea::placeholder {
+  font-size: 14px;
+}
+
+html[lang='ar'] .page-contact .contact-submit {
+  font-size: 17px;
 }
 
 @media (max-width: 1100px) {

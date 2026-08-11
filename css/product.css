@@ -44,15 +44,42 @@
 }
 
 .main-image {
+  position: relative;
   border: 1px solid var(--line);
   background: var(--placeholder);
   overflow: hidden;
+  cursor: zoom-in;
 }
 
 .main-image img {
   width: 100%;
   aspect-ratio: 1 / 1;
   object-fit: cover;
+}
+
+.img-magnifier-lens {
+  position: absolute;
+  width: 170px;
+  height: 170px;
+  border: 2px solid var(--gold);
+  border-radius: 50%;
+  background-repeat: no-repeat;
+  background-color: var(--white);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
+  z-index: 5;
+}
+
+@media (max-width: 900px), (hover: none) {
+  .img-magnifier-lens {
+    display: none;
+  }
+
+  .main-image {
+    cursor: default;
+  }
 }
 
 .detail-info {

@@ -394,16 +394,25 @@ const initProductDetail = () => {
 
   document.title = `${product.name} — Carolina`;
 
+  // Some colors have their own photo set (e.g. a black sock vs a tan sock look
+  // very different) — fall back to the shared gallery when a color has none.
+  const imagesForColor = (colorName) => {
+    const c = product.colors.find((x) => x.name === colorName);
+    return c && Array.isArray(c.images) && c.images.length ? c.images : product.images;
+  };
+
   const render = () => {
     const priceBlock =
       product.salePrice != null
         ? `<p class="detail-price"><s style="opacity:.5;margin-right:10px;font-size:0.75em">${money(product.price)}</s>${money(product.salePrice)}${product.discountPercent ? ` <span style="font-size:12px;color:var(--gold-dark)">−${product.discountPercent}%</span>` : ''}</p>`
         : `<p class="detail-price">${money(product.price)}</p>`;
 
+    const displayImages = imagesForColor(selectedColor);
+
     root.innerHTML = `
       <h1>${product.name}</h1>
       <div class="thumb-col">
-        ${product.images
+        ${displayImages
         .map(
           (src, i) => `
           <button type="button" data-thumb class="${i === 0 ? 'active' : ''}" data-full="${src}" aria-label="View image ${i + 1}">
@@ -413,7 +422,7 @@ const initProductDetail = () => {
         .join('')}
       </div>
       <div class="main-image">
-        <img data-main-image src="${product.images[0]}" alt="${product.name}" />
+        <img data-main-image src="${displayImages[0]}" alt="${product.name}" />
       </div>
       <div class="detail-info">
         ${priceBlock}
@@ -452,16 +461,16 @@ const initProductDetail = () => {
         thumb.classList.add('active');
         const mainImg = root.querySelector('[data-main-image]');
         if (mainImg && thumb.dataset.full) mainImg.src = thumb.dataset.full;
+        setupMagnifier();
       });
     });
 
     root.querySelectorAll('.swatch[data-color]').forEach((swatch) => {
       swatch.addEventListener('click', () => {
         selectedColor = swatch.dataset.color;
-        root.querySelectorAll('.swatch[data-color]').forEach((s) => s.classList.remove('selected'));
-        swatch.classList.add('selected');
-        const label = root.querySelector('[data-color-label]');
-        if (label) label.textContent = selectedColor;
+        // Colors can carry their own photo set, so re-render the whole
+        // gallery (thumbnails + main image) rather than just the label.
+        render();
       });
     });
 
@@ -481,6 +490,55 @@ const initProductDetail = () => {
     });
 
     renderRelated();
+    setupMagnifier();
+  };
+
+  // Hover magnifier: a small round lens follows the cursor over the main
+  // product photo, showing a zoomed-in view inside it.
+  const setupMagnifier = () => {
+    const container = root.querySelector('.main-image');
+    const imgEl = root.querySelector('[data-main-image]');
+    if (!container || !imgEl) return;
+    const zoom = 2.4;
+
+    let lens = container.querySelector('.img-magnifier-lens');
+    if (!lens) {
+      lens = document.createElement('div');
+      lens.className = 'img-magnifier-lens';
+      container.appendChild(lens);
+    }
+
+    const updateBackground = () => {
+      lens.style.backgroundImage = `url('${imgEl.currentSrc || imgEl.src}')`;
+      const w = imgEl.clientWidth || container.clientWidth;
+      const h = imgEl.clientHeight || container.clientHeight;
+      lens.style.backgroundSize = `${w * zoom}px ${h * zoom}px`;
+    };
+
+    const moveLens = (e) => {
+      const rect = imgEl.getBoundingClientRect();
+      const point = e.touches ? e.touches[0] : e;
+      let x = point.clientX - rect.left;
+      let y = point.clientY - rect.top;
+      const half = lens.offsetWidth / 2;
+      x = Math.max(half, Math.min(x, rect.width - half));
+      y = Math.max(half, Math.min(y, rect.height - half));
+      lens.style.left = `${x - half}px`;
+      lens.style.top = `${y - half}px`;
+      lens.style.backgroundPosition = `-${x * zoom - half}px -${y * zoom - half}px`;
+    };
+
+    imgEl.onload = updateBackground;
+    if (imgEl.complete) updateBackground();
+
+    container.onmouseenter = () => {
+      updateBackground();
+      lens.style.opacity = '1';
+    };
+    container.onmousemove = moveLens;
+    container.onmouseleave = () => {
+      lens.style.opacity = '0';
+    };
   };
 
   // Lightweight "customers also like" suggestions — picks other in-stock

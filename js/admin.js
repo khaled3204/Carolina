@@ -391,6 +391,44 @@
       .join('');
   }
 
+  let colorRowSeq = 0;
+
+  // Renders the "which of this sock's photos belong to this color" checklist
+  // shown inside each color row. `selected` is the set of image URLs already
+  // assigned to this color (kept in the row's dataset so it survives re-renders).
+  function renderColorImagePicker(pool, selected) {
+    if (!pool.length) {
+      return '<p class="empty-hint" style="margin:4px 0 0;font-size:11px">Add photos below, then pick which ones show this color.</p>';
+    }
+    return `
+      <div class="color-image-picker" data-color-image-picker>
+        ${pool
+        .map(
+          (src, i) => `
+          <label class="color-image-option" title="${escapeHtml(src)}">
+            <input type="checkbox" data-color-image-check value="${escapeHtml(src)}" ${selected.includes(src) ? 'checked' : ''} />
+            <img src="${escapeHtml(imageSrc(src))}" alt="" />
+          </label>`
+        )
+        .join('')}
+      </div>`;
+  }
+
+  function renderColorRow(c, isFirst, pool) {
+    const rowId = `cr${++colorRowSeq}`;
+    const selected = Array.isArray(c.images) ? c.images.filter((src) => pool.includes(src)) : [];
+    return `
+      <div class="color-row" data-color-row data-row-id="${rowId}">
+        <div class="color-row-main">
+          <input name="colorName" value="${escapeHtml(c.name || '')}" placeholder="Color name" required />
+          <input name="colorHex" type="color" value="${escapeHtml(c.hex || '#cccccc')}" />
+          <button type="button" class="btn-admin ghost small" data-remove-color ${isFirst ? 'disabled' : ''}>✕</button>
+        </div>
+        <p class="color-image-picker-label">Photos for this color <span style="font-weight:300">(leave blank to use all photos)</span></p>
+        <div data-color-image-picker-wrap>${renderColorImagePicker(pool, selected)}</div>
+      </div>`;
+  }
+
   function renderProductForm() {
     const p = state.products.find((x) => x.id === state.editingId) || {
       name: '',
@@ -398,19 +436,14 @@
       stock: 20,
       description: '',
       images: [],
-      colors: [{ name: 'BLACK', hex: '#111111' }],
+      colors: [{ name: 'BLACK', hex: '#111111', images: [] }],
       sizes: ['FREE SIZE'],
       active: true
     };
 
-    const colors = (p.colors || []).map(
-      (c, i) => `
-      <div class="color-row" data-color-row>
-        <input name="colorName" value="${escapeHtml(c.name)}" placeholder="Color name" required />
-        <input name="colorHex" type="color" value="${escapeHtml(c.hex || '#cccccc')}" />
-        <button type="button" class="btn-admin ghost small" data-remove-color ${i === 0 ? 'disabled' : ''}>✕</button>
-      </div>`
-    ).join('');
+    const pool = (p.images || []).filter(Boolean);
+    colorRowSeq = 0;
+    const colors = (p.colors || []).map((c, i) => renderColorRow(c, i === 0, pool)).join('');
 
     return `
       <form class="admin-form" data-product-form>
@@ -422,11 +455,6 @@
         <label>Sizes <span style="font-weight:300">(comma separated)</span>
           <input name="sizes" value="${escapeHtml((p.sizes || [p.size || 'FREE SIZE']).join(', '))}" />
         </label>
-        <div class="color-builder">
-          <span style="font-family:var(--font-nav);font-size:12px;letter-spacing:0.05em;color:var(--ink-soft)">Colors</span>
-          <div data-color-list>${colors}</div>
-          <button type="button" class="btn-admin ghost small" data-add-color>+ Color</button>
-        </div>
         <div class="image-builder">
           <span style="font-family:var(--font-nav);font-size:12px;letter-spacing:0.05em;color:var(--ink-soft)">Pictures</span>
           <div class="image-slots" data-image-list>${renderImageSlots(p.images)}</div>
@@ -443,6 +471,12 @@
               <button type="button" class="btn-admin ghost small" data-add-image-url>Add</button>
             </div>
           </label>
+        </div>
+        <div class="color-builder">
+          <span style="font-family:var(--font-nav);font-size:12px;letter-spacing:0.05em;color:var(--ink-soft)">Colors</span>
+          <p class="empty-hint" style="margin:0 0 10px">Upload photos above first, then tick which photos belong to each color below — great for socks whose colors look different (like your black / tan / gold example). Leave a color's photos blank to fall back to all photos.</p>
+          <div data-color-list>${colors}</div>
+          <button type="button" class="btn-admin ghost small" data-add-color>+ Color</button>
         </div>
         <label>Description<textarea name="description">${escapeHtml(p.description || '')}</textarea></label>
         <label style="display:flex;align-items:center;gap:8px;grid-template-columns:auto 1fr">
@@ -724,29 +758,45 @@
       render();
     });
 
-    app.querySelector('[data-add-color]')?.addEventListener('click', () => {
-      const list = app.querySelector('[data-color-list]');
-      if (!list) return;
-      const row = document.createElement('div');
-      row.className = 'color-row';
-      row.dataset.colorRow = '';
-      row.innerHTML = `
-        <input name="colorName" placeholder="Color name" required />
-        <input name="colorHex" type="color" value="#c9a15c" />
-        <button type="button" class="btn-admin ghost small" data-remove-color>✕</button>`;
-      list.appendChild(row);
-      row.querySelector('[data-remove-color]')?.addEventListener('click', () => row.remove());
-    });
-
-    app.querySelectorAll('[data-remove-color]').forEach((btn) => {
-      btn.addEventListener('click', () => btn.closest('[data-color-row]')?.remove());
-    });
-
     function collectImageUrls() {
       return [...app.querySelectorAll('[name="imageUrl"]')]
         .map((el) => el.value.trim())
         .filter(Boolean);
     }
+
+    // Reads which photos are currently ticked for a given color row.
+    function collectRowSelectedImages(row) {
+      return [...row.querySelectorAll('[data-color-image-check]:checked')].map((el) => el.value);
+    }
+
+    // Re-renders every color row's photo-picker checklist against the current
+    // photo pool, keeping each row's previously-ticked photos ticked.
+    function refreshColorImagePickers() {
+      const pool = collectImageUrls();
+      app.querySelectorAll('[data-color-row]').forEach((row) => {
+        const wrap = row.querySelector('[data-color-image-picker-wrap]');
+        if (!wrap) return;
+        const selected = collectRowSelectedImages(row).filter((src) => pool.includes(src));
+        wrap.innerHTML = renderColorImagePicker(pool, selected);
+      });
+    }
+
+    function bindColorRow(row) {
+      row.querySelector('[data-remove-color]')?.addEventListener('click', () => row.remove());
+    }
+
+    app.querySelectorAll('[data-color-row]').forEach(bindColorRow);
+
+    app.querySelector('[data-add-color]')?.addEventListener('click', () => {
+      const list = app.querySelector('[data-color-list]');
+      if (!list) return;
+      const pool = collectImageUrls();
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = renderColorRow({ name: '', hex: '#c9a15c', images: [] }, false, pool);
+      const row = wrapper.firstElementChild;
+      list.appendChild(row);
+      bindColorRow(row);
+    });
 
     function refreshImageSlots(urls) {
       const list = app.querySelector('[data-image-list]');
@@ -760,8 +810,10 @@
           } else {
             refreshImageSlots(collectImageUrls());
           }
+          refreshColorImagePickers();
         });
       });
+      refreshColorImagePickers();
     }
 
     app.querySelectorAll('[data-remove-image]').forEach((btn) => {
@@ -842,9 +894,13 @@
       e.preventDefault();
       const form = e.currentTarget;
       const fd = new FormData(form);
-      const colorNames = [...form.querySelectorAll('[name="colorName"]')].map((el) => el.value.trim());
-      const colorHexes = [...form.querySelectorAll('[name="colorHex"]')].map((el) => el.value);
-      const colors = colorNames.map((name, i) => ({ name, hex: colorHexes[i] || '#cccccc' })).filter((c) => c.name);
+      const colors = [...form.querySelectorAll('[data-color-row]')]
+        .map((row) => ({
+          name: row.querySelector('[name="colorName"]')?.value.trim() || '',
+          hex: row.querySelector('[name="colorHex"]')?.value || '#cccccc',
+          images: collectRowSelectedImages(row)
+        }))
+        .filter((c) => c.name);
       const images = collectImageUrls();
       if (!images.length) {
         state.error = 'Add at least one picture.';
