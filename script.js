@@ -172,6 +172,11 @@ const moneyFixed = (n) => `${Number(n).toFixed(2)} ${currencyLabel()}`;
 const unitPrice = (product) =>
   product && product.salePrice != null ? Number(product.salePrice) : Number(product?.price || 0);
 
+const productName = (product) => {
+  const isArabic = window.CarolinaI18n && typeof window.CarolinaI18n.getLang === 'function' && window.CarolinaI18n.getLang() === 'ar';
+  return isArabic && product?.nameAr ? product.nameAr : product?.name || '';
+};
+
 const getProduct = (id) => PRODUCTS.find((p) => p.id === id) || PRODUCTS[0] || DEFAULT_PRODUCTS[0];
 
 const readCart = () => {
@@ -367,11 +372,11 @@ const initCollections = () => {
     return `
     <a class="product-card ${product.stock === 0 ? 'is-out-of-stock' : ''}" href="product.html?item=${encodeURIComponent(product.id)}">
       <div class="product-media">
-        <img src="${product.images[0]}" alt="${product.name}" loading="lazy" />
+        <img src="${product.images[0]}" alt="${productName(product)}" loading="lazy" />
         ${stockHtml}
       </div>
       <div class="product-info">
-        <span class="product-name">${product.name}</span>
+        <span class="product-name">${productName(product)}</span>
         ${priceHtml}
       </div>
     </a>`;
@@ -398,7 +403,7 @@ const initProductDetail = () => {
   const sizes = product.sizes?.length ? product.sizes : [product.size || 'FREE SIZE'];
   let selectedSize = sizes[0];
 
-  document.title = `${product.name} — Carolina`;
+  document.title = `${productName(product)} — Carolina`;
 
   // Some colors have their own photo set (e.g. a black sock vs a tan sock look
   // very different) — fall back to the shared gallery when a color has none.
@@ -416,7 +421,7 @@ const initProductDetail = () => {
     const displayImages = imagesForColor(selectedColor);
 
     root.innerHTML = `
-      <h1>${product.name}</h1>
+      <h1>${productName(product)}</h1>
       <div class="thumb-col">
         ${displayImages
         .map(
@@ -428,7 +433,7 @@ const initProductDetail = () => {
         .join('')}
       </div>
       <div class="main-image">
-        <img data-main-image src="${displayImages[0]}" alt="${product.name}" />
+        <img data-main-image src="${displayImages[0]}" alt="${productName(product)}" />
       </div>
       <div class="detail-info">
         ${priceBlock}
@@ -573,10 +578,10 @@ const initProductDetail = () => {
             (p) => `
           <a class="product-card" href="product.html?item=${encodeURIComponent(p.id)}">
             <div class="product-media">
-              <img src="${p.images[0]}" alt="${p.name}" loading="lazy" />
+              <img src="${p.images[0]}" alt="${productName(p)}" loading="lazy" />
             </div>
             <div class="product-info">
-              <span class="product-name">${p.name}</span>
+              <span class="product-name">${productName(p)}</span>
               <span class="product-price">${money(unitPrice(p))}</span>
             </div>
           </a>`
@@ -619,9 +624,9 @@ const initCartPage = () => {
           const size = item.size || product.size || t('product.freeSize');
           return `
             <div class="cart-row" data-index="${index}">
-              <img src="${product.images[0]}" alt="${product.name}" />
+              <img src="${product.images[0]}" alt="${productName(product)}" />
               <div>
-                <p class="cart-item-name">${product.name}</p>
+                <p class="cart-item-name">${productName(product)}</p>
                 <p class="cart-item-variant">${item.color} / ${size}</p>
                 <p class="cart-item-price">${money(unitPrice(product))}</p>
                 <button type="button" class="cart-remove" data-remove>${t('cart.remove')}</button>
@@ -786,10 +791,10 @@ const initCheckoutPage = () => {
           const size = item.size || product.size || t('product.freeSize');
           return `
             <div class="order-row" data-index="${index}">
-              <img src="${product.images[0]}" alt="${product.name}" />
+              <img src="${product.images[0]}" alt="${productName(product)}" />
               <div>
                 <p class="order-row-name">
-                  ${product.name}
+                  ${productName(product)}
                   <button type="button" data-remove>${t('checkout.remove')}</button>
                 </p>
                 <p class="order-row-variant">${item.color} / ${size}</p>
@@ -982,9 +987,9 @@ const initPaymentPage = () => {
               : '';
           return `
             <div class="order-row">
-              <img src="${product.images[0]}" alt="${product.name}" />
+              <img src="${product.images[0]}" alt="${productName(product)}" />
               <div>
-                <p class="order-row-name">${product.name}${sale}</p>
+                <p class="order-row-name">${productName(product)}${sale}</p>
                 <p class="order-row-variant">${item.color} / ${size}</p>
                 <div class="order-row-bottom"><span>(${item.qty})</span><span>${money(unitPrice(product) * item.qty)}</span></div>
               </div>

@@ -461,6 +461,9 @@
     return `
       <form class="admin-form" data-product-form>
         <label>Name<input name="name" value="${escapeHtml(p.name)}" required /></label>
+        <label>Arabic name <span style="font-weight:300">(optional — shown when a shopper views the site in Arabic)</span>
+          <input name="nameAr" dir="rtl" value="${escapeHtml(p.nameAr || '')}" placeholder="الاسم بالعربية" />
+        </label>
         <div class="row-2">
           <label>Price<input name="price" type="number" min="0" step="0.01" value="${escapeHtml(p.price)}" required /></label>
           <label>Stock<input name="stock" type="number" min="0" step="1" value="${escapeHtml(p.stock ?? 0)}" /></label>
@@ -492,6 +495,9 @@
           <button type="button" class="btn-admin ghost small" data-add-color>+ Color</button>
         </div>
         <label>Description<textarea name="description">${escapeHtml(p.description || '')}</textarea></label>
+        <label>Arabic description <span style="font-weight:300">(optional)</span>
+          <textarea name="descriptionAr" dir="rtl">${escapeHtml(p.descriptionAr || '')}</textarea>
+        </label>
         <label style="display:flex;align-items:center;gap:8px;grid-template-columns:auto 1fr">
           <input name="active" type="checkbox" ${p.active !== false ? 'checked' : ''} style="width:auto" />
           Visible in shop
@@ -941,6 +947,7 @@
       }
       const payload = {
         name: fd.get('name'),
+        nameAr: fd.get('nameAr'),
         price: Number(fd.get('price')),
         stock: fd.get('stock') === '' || fd.get('stock') == null ? undefined : Number(fd.get('stock')),
         sizes: String(fd.get('sizes') || '')
@@ -949,6 +956,7 @@
           .filter(Boolean),
         images,
         description: fd.get('description'),
+        descriptionAr: fd.get('descriptionAr'),
         active: form.querySelector('[name="active"]')?.checked !== false,
         colors
       };
