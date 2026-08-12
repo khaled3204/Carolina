@@ -5,7 +5,8 @@
 const CART_KEY = 'carolina-cart';
 const CHECKOUT_KEY = 'carolina-checkout';
 const COUPON_KEY = 'carolina-coupon';
-const SHIPPING = 5;
+const SHIPPING_RATE = 0.14; // shipping fee = 14% of subtotal (EGP)
+const shippingFor = (subtotal) => Math.round(Number(subtotal || 0) * SHIPPING_RATE * 100) / 100;
 
 const t = (key, vars) =>
   (window.CarolinaI18n && typeof window.CarolinaI18n.t === 'function'
@@ -160,8 +161,13 @@ const DEFAULT_PRODUCTS = [
 let PRODUCTS = [...DEFAULT_PRODUCTS];
 
 /* ---- Helpers ---- */
-const money = (n) => `$ ${Number(n).toFixed(Number.isInteger(n) ? 0 : 2)}`.replace(/\.00$/, '');
-const moneyFixed = (n) => `$${Number(n).toFixed(2)}`;
+const currencyLabel = () =>
+  window.CarolinaI18n && typeof window.CarolinaI18n.getLang === 'function' && window.CarolinaI18n.getLang() === 'ar'
+    ? 'ج.م'
+    : 'EGP';
+const money = (n) =>
+  `${Number(n).toFixed(Number.isInteger(n) ? 0 : 2).replace(/\.00$/, '')} ${currencyLabel()}`;
+const moneyFixed = (n) => `${Number(n).toFixed(2)} ${currencyLabel()}`;
 
 const unitPrice = (product) =>
   product && product.salePrice != null ? Number(product.salePrice) : Number(product?.price || 0);
@@ -415,7 +421,7 @@ const initProductDetail = () => {
         ${displayImages
         .map(
           (src, i) => `
-          <button type="button" data-thumb class="${i === 0 ? 'active' : ''}" data-full="${src}" aria-label="View image ${i + 1}">
+          <button type="button" data-thumb class="${i === 0 ? 'active' : ''}" data-full="${src}" aria-label="${t('product.viewImage', { n: i + 1 })}">
             <img src="${src}" alt="" />
           </button>`
         )
@@ -560,7 +566,7 @@ const initProductDetail = () => {
     }
 
     relatedRoot.innerHTML = `
-      <h2>You may also like</h2>
+      <h2>${t('product.related')}</h2>
       <div class="related-grid">
         ${scored
           .map(
@@ -593,8 +599,8 @@ const initCartPage = () => {
     if (!items.length) {
       root.innerHTML = `
         <div class="cart-empty">
-          <p>Your cart is empty.</p>
-          <a href="collections.html" class="btn-gold">GO TO SHOP</a>
+          <p>${t('cart.empty')}</p>
+          <a href="collections.html" class="btn-gold">${t('home.shop')}</a>
         </div>`;
       return;
     }
@@ -602,7 +608,7 @@ const initCartPage = () => {
     const subtotal = cartSubtotal(items);
     const coupon = readCoupon();
     const discount = coupon ? coupon.discount : 0;
-    const total = Math.max(0, subtotal - discount) + SHIPPING;
+    const total = Math.max(0, subtotal - discount) + shippingFor(subtotal);
 
     root.innerHTML = `
       <div class="cart-items">
@@ -610,7 +616,7 @@ const initCartPage = () => {
         .map((item, index) => {
           const product = getProduct(item.id);
           const line = unitPrice(product) * item.qty;
-          const size = item.size || product.size || 'FREE SIZE';
+          const size = item.size || product.size || t('product.freeSize');
           return `
             <div class="cart-row" data-index="${index}">
               <img src="${product.images[0]}" alt="${product.name}" />
@@ -618,12 +624,12 @@ const initCartPage = () => {
                 <p class="cart-item-name">${product.name}</p>
                 <p class="cart-item-variant">${item.color} / ${size}</p>
                 <p class="cart-item-price">${money(unitPrice(product))}</p>
-                <button type="button" class="cart-remove" data-remove>Remove</button>
+                <button type="button" class="cart-remove" data-remove>${t('cart.remove')}</button>
               </div>
               <div class="qty-control">
-                <button type="button" data-qty-dec aria-label="Decrease quantity">–</button>
+                <button type="button" data-qty-dec aria-label="${t('cart.decQty')}">–</button>
                 <span data-qty>${item.qty}</span>
-                <button type="button" data-qty-inc aria-label="Increase quantity">+</button>
+                <button type="button" data-qty-inc aria-label="${t('cart.incQty')}">+</button>
               </div>
               <div class="line-total">${money(line)}</div>
             </div>`;
@@ -632,17 +638,17 @@ const initCartPage = () => {
       </div>
       <div class="summary-box">
         <div class="coupon-box">
-          <input type="text" data-coupon-input placeholder="Coupon code" value="${coupon ? coupon.code : ''}" />
-          <button type="button" data-coupon-apply class="btn-gold" style="padding:10px 18px;font-size:12px">${coupon ? 'Update' : 'Apply'}</button>
-          ${coupon ? '<button type="button" data-coupon-remove class="cart-remove">Remove</button>' : ''}
+          <input type="text" data-coupon-input placeholder="${t('cart.couponPlaceholder')}" value="${coupon ? coupon.code : ''}" />
+          <button type="button" data-coupon-apply class="btn-gold" style="padding:10px 18px;font-size:12px">${coupon ? t('cart.update') : t('cart.apply')}</button>
+          ${coupon ? `<button type="button" data-coupon-remove class="cart-remove">${t('cart.remove')}</button>` : ''}
         </div>
         <p class="coupon-message" data-coupon-message></p>
-        <div class="summary-row"><span>Subtotal</span><span>${moneyFixed(subtotal)}</span></div>
-        ${coupon ? `<div class="summary-row"><span>Discount (${coupon.code})</span><span>-${moneyFixed(discount)}</span></div>` : ''}
-        <div class="summary-row"><span>Shipping</span><span>${moneyFixed(SHIPPING)}</span></div>
-        <div class="summary-row total"><span>Total</span><span>${moneyFixed(total)}</span></div>
+        <div class="summary-row"><span>${t('cart.subtotal')}</span><span>${moneyFixed(subtotal)}</span></div>
+        ${coupon ? `<div class="summary-row"><span>${t('cart.discount')} (${coupon.code})</span><span>-${moneyFixed(discount)}</span></div>` : ''}
+        <div class="summary-row"><span>${t('cart.shipping')}</span><span>${moneyFixed(shippingFor(subtotal))}</span></div>
+        <div class="summary-row total"><span>${t('cart.total')}</span><span>${moneyFixed(total)}</span></div>
         <a href="checkout.html" class="btn-gold">
-          Check Out
+          ${t('cart.checkout')}
           <svg viewBox="0 0 24 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
             <path d="M0 6h22M17 1l5 5-5 5" />
           </svg>
@@ -653,11 +659,11 @@ const initCartPage = () => {
       const input = root.querySelector('[data-coupon-input]');
       const msg = root.querySelector('[data-coupon-message]');
       const code = String(input.value || '').trim();
-      msg.textContent = 'Checking…';
+      msg.textContent = t('cart.checking');
       const result = await validateCoupon(code, cartSubtotal(items));
       if (!result.valid) {
         clearCoupon();
-        msg.textContent = result.error || 'Invalid coupon code';
+        msg.textContent = result.error || t('coupon.invalid');
         return;
       }
       writeCoupon(result);
@@ -726,8 +732,8 @@ const initCheckoutPage = () => {
     if (!items.length) {
       root.innerHTML = `
         <div class="checkout-empty">
-          <p>Your cart is empty.</p>
-          <a href="collections.html" class="btn-gold">GO TO SHOP</a>
+          <p>${t('cart.empty')}</p>
+          <a href="collections.html" class="btn-gold">${t('home.shop')}</a>
         </div>`;
       return;
     }
@@ -735,33 +741,33 @@ const initCheckoutPage = () => {
     const subtotal = cartSubtotal(items);
     const coupon = readCoupon();
     const discount = coupon ? coupon.discount : 0;
-    const total = Math.max(0, subtotal - discount) + SHIPPING;
+    const total = Math.max(0, subtotal - discount) + shippingFor(subtotal);
     const count = cartQtyTotal(items);
     const saved = readCheckout()?.shipping || {};
 
     root.innerHTML = `
       <div>
-        <h1>Checkout</h1>
+        <h1>${t('checkout.title')}</h1>
         <form data-checkout-form>
-          <p class="form-section-label">Contact Info</p>
+          <p class="form-section-label">${t('checkout.contact')}</p>
           <div class="form-grid single">
-            <input type="email" name="email" placeholder="Email" autocomplete="email" value="${saved.email || signedInEmail || ''}" required />
-            <input type="tel" name="phone" placeholder="Phone" autocomplete="tel" value="${saved.phone || ''}" />
+            <input type="email" name="email" placeholder="${t('checkout.email')}" autocomplete="email" value="${saved.email || signedInEmail || ''}" required />
+            <input type="tel" name="phone" placeholder="${t('checkout.phone')}" autocomplete="tel" value="${saved.phone || ''}" />
           </div>
 
-          <p class="form-section-label">Shipping Address</p>
+          <p class="form-section-label">${t('checkout.shipping')}</p>
           <div class="form-grid">
-            <input type="text" name="firstName" placeholder="First Name" autocomplete="given-name" value="${saved.firstName || ''}" required />
-            <input type="text" name="lastName" placeholder="Last Name" autocomplete="family-name" value="${saved.lastName || ''}" required />
-            <input class="span-2" type="text" name="country" placeholder="Country" autocomplete="country-name" value="${saved.country || 'Egypt'}" required />
-            <input class="span-2" type="text" name="region" placeholder="State / Region" autocomplete="address-level1" value="${saved.region || ''}" />
-            <input class="span-2" type="text" name="address" placeholder="Address" autocomplete="street-address" value="${saved.address || ''}" required />
-            <input type="text" name="city" placeholder="City" autocomplete="address-level2" value="${saved.city || ''}" required />
-            <input type="text" name="postal" placeholder="Postal Code" autocomplete="postal-code" value="${saved.postal || ''}" required />
+            <input type="text" name="firstName" placeholder="${t('checkout.firstName')}" autocomplete="given-name" value="${saved.firstName || ''}" required />
+            <input type="text" name="lastName" placeholder="${t('checkout.lastName')}" autocomplete="family-name" value="${saved.lastName || ''}" required />
+            <input class="span-2" type="text" name="country" placeholder="${t('checkout.country')}" autocomplete="country-name" value="${saved.country || 'Egypt'}" required />
+            <input class="span-2" type="text" name="region" placeholder="${t('checkout.region')}" autocomplete="address-level1" value="${saved.region || ''}" />
+            <input class="span-2" type="text" name="address" placeholder="${t('checkout.address')}" autocomplete="street-address" value="${saved.address || ''}" required />
+            <input type="text" name="city" placeholder="${t('checkout.city')}" autocomplete="address-level2" value="${saved.city || ''}" required />
+            <input type="text" name="postal" placeholder="${t('checkout.postal')}" autocomplete="postal-code" value="${saved.postal || ''}" required />
           </div>
 
           <button type="submit" class="payment-btn">
-            Continue to payment
+            ${t('checkout.continue')}
             <svg viewBox="0 0 24 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
               <path d="M0 6h22M17 1l5 5-5 5" />
             </svg>
@@ -771,20 +777,20 @@ const initCheckoutPage = () => {
 
       <aside class="order-summary">
         <div class="order-summary-top">
-          <span>YOUR ORDER</span>
+          <span>${t('checkout.yourOrder')}</span>
           <span class="count">(${count})</span>
         </div>
         ${items
         .map((item, index) => {
           const product = getProduct(item.id);
-          const size = item.size || product.size || 'FREE SIZE';
+          const size = item.size || product.size || t('product.freeSize');
           return `
             <div class="order-row" data-index="${index}">
               <img src="${product.images[0]}" alt="${product.name}" />
               <div>
                 <p class="order-row-name">
                   ${product.name}
-                  <button type="button" data-remove>Remove</button>
+                  <button type="button" data-remove>${t('checkout.remove')}</button>
                 </p>
                 <p class="order-row-variant">${item.color} / ${size}</p>
                 <div class="order-row-bottom"><span>(${item.qty})</span><span>${money(unitPrice(product) * item.qty)}</span></div>
@@ -792,10 +798,10 @@ const initCheckoutPage = () => {
             </div>`;
         })
         .join('')}
-        <div class="summary-row"><span>Subtotal</span><span>${moneyFixed(subtotal)}</span></div>
-        ${coupon ? `<div class="summary-row"><span>Discount (${coupon.code})</span><span>-${moneyFixed(discount)}</span></div>` : ''}
-        <div class="summary-row"><span>Shipping</span><span>${moneyFixed(SHIPPING)}</span></div>
-        <div class="summary-row total"><span>Total</span><span>${moneyFixed(total)}</span></div>
+        <div class="summary-row"><span>${t('cart.subtotal')}</span><span>${moneyFixed(subtotal)}</span></div>
+        ${coupon ? `<div class="summary-row"><span>${t('cart.discount')} (${coupon.code})</span><span>-${moneyFixed(discount)}</span></div>` : ''}
+        <div class="summary-row"><span>${t('cart.shipping')}</span><span>${moneyFixed(shippingFor(subtotal))}</span></div>
+        <div class="summary-row total"><span>${t('cart.total')}</span><span>${moneyFixed(total)}</span></div>
       </aside>`;
 
     root.querySelectorAll('[data-remove]').forEach((btn) => {
@@ -873,8 +879,8 @@ const initPaymentPage = () => {
   if (!items.length) {
     root.innerHTML = `
       <div class="payment-empty">
-        <p>Your cart is empty.</p>
-        <a href="collections.html" class="btn-gold">GO TO SHOP</a>
+        <p>${t('payment.emptyCart')}</p>
+        <a href="collections.html" class="btn-gold">${t('home.shop')}</a>
       </div>`;
     return;
   }
@@ -882,8 +888,8 @@ const initPaymentPage = () => {
   if (!checkout?.shipping) {
     root.innerHTML = `
       <div class="payment-empty">
-        <p>Please complete shipping details first.</p>
-        <a href="checkout.html" class="btn-gold">Back to checkout</a>
+        <p>${t('payment.needShipping')}</p>
+        <a href="checkout.html" class="btn-gold">${t('payment.backCheckout')}</a>
       </div>`;
     return;
   }
@@ -893,71 +899,71 @@ const initPaymentPage = () => {
   const subtotal = cartSubtotal(items);
   const coupon = readCoupon();
   const discount = coupon ? coupon.discount : 0;
-  const total = Math.max(0, subtotal - discount) + SHIPPING;
+  const total = Math.max(0, subtotal - discount) + shippingFor(subtotal);
   const count = cartQtyTotal(items);
 
   const render = () => {
     root.innerHTML = `
       <div>
-        <h1>Payment</h1>
-        <p class="payment-lead">Choose how you’d like to pay. Your order is reserved once you confirm below.</p>
+        <h1>${t('payment.title')}</h1>
+        <p class="payment-lead">${t('payment.lead')}</p>
 
-        <div class="pay-methods" role="radiogroup" aria-label="Payment method">
+        <div class="pay-methods" role="radiogroup" aria-label="${t('payment.methods')}">
           <label class="pay-option ${method === 'cod' ? 'is-selected' : ''}">
             <input type="radio" name="pay" value="cod" ${method === 'cod' ? 'checked' : ''} />
             <div>
-              <p class="pay-option-title">Cash on delivery</p>
-              <p class="pay-option-desc">Pay when your Carolina order arrives.</p>
+              <p class="pay-option-title">${t('payment.cod')}</p>
+              <p class="pay-option-desc">${t('payment.codDesc')}</p>
             </div>
-            <span class="pay-badge">Popular</span>
+            <span class="pay-badge">${t('payment.popular')}</span>
           </label>
           <label class="pay-option ${method === 'card' ? 'is-selected' : ''}">
             <input type="radio" name="pay" value="card" ${method === 'card' ? 'checked' : ''} />
             <div>
-              <p class="pay-option-title">Card</p>
-              <p class="pay-option-desc">Visa / Mastercard — secure checkout.</p>
+              <p class="pay-option-title">${t('payment.card')}</p>
+              <p class="pay-option-desc">${t('payment.cardDesc')}</p>
             </div>
           </label>
           <label class="pay-option ${method === 'instapay' ? 'is-selected' : ''}">
             <input type="radio" name="pay" value="instapay" ${method === 'instapay' ? 'checked' : ''} />
             <div>
-              <p class="pay-option-title">InstaPay</p>
-              <p class="pay-option-desc">Transfer then confirm your order.</p>
+              <p class="pay-option-title">${t('payment.instapay')}</p>
+              <p class="pay-option-desc">${t('payment.instapayDesc')}</p>
             </div>
           </label>
         </div>
 
         <div class="card-fields ${method === 'card' ? 'is-open' : ''}" data-card-fields>
-          <label class="span-2">Name on card<input name="cardName" autocomplete="cc-name" placeholder="Full name" /></label>
-          <label class="span-2">Card number<input name="cardNumber" inputmode="numeric" autocomplete="cc-number" placeholder="•••• •••• •••• ••••" maxlength="19" /></label>
-          <label>Expiry<input name="cardExp" autocomplete="cc-exp" placeholder="MM/YY" maxlength="5" /></label>
-          <label>CVC<input name="cardCvc" inputmode="numeric" autocomplete="cc-csc" placeholder="•••" maxlength="4" /></label>
+          <p class="instapay-note is-open">${t('payment.cardRedirectNote')}</p>
+        </div>
+
+        <div class="card-fields ${method === 'instapay' ? 'is-open' : ''}" data-wallet-fields>
+          <label class="span-2">${t('payment.walletNumber')}<input name="walletNumber" inputmode="tel" placeholder="01xxxxxxxxx" value="${ship.phone || ''}" maxlength="15" /></label>
         </div>
 
         <div class="instapay-note ${method === 'instapay' ? 'is-open' : ''}">
-          Transfer <strong>${moneyFixed(total)}</strong> via InstaPay, then place your order.
-          Use your order email as the transfer reference. Our team will confirm payment shortly.
+          ${t('payment.instapayNote', { amount: `<strong>${moneyFixed(total)}</strong>` })}
         </div>
 
         <button type="button" class="place-order-btn" data-place-order>
-          Place order · ${moneyFixed(total)}
+          ${t('payment.placeOrder', { amount: moneyFixed(total) })}
           <svg viewBox="0 0 24 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
             <path d="M0 6h22M17 1l5 5-5 5" />
           </svg>
         </button>
         <div class="secure-row">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v6c0 5 3.2 8.4 7 9 3.8-.6 7-4 7-9V6l-7-3z" stroke-width="1.5"/></svg>
-          Encrypted session · Carolina never stores full card numbers
+          ${t('payment.secure')}
         </div>
       </div>
 
       <aside class="order-summary">
         <div class="order-summary-top">
-          <span>ORDER SUMMARY</span>
+          <span>${t('payment.summary')}</span>
           <span class="count">(${count})</span>
         </div>
         <div class="ship-box">
-          <h2>Shipping to</h2>
+          <h2>${t('payment.shippingTo')}</h2>
           <p>
             ${ship.firstName} ${ship.lastName}<br />
             ${ship.address}<br />
@@ -969,10 +975,10 @@ const initPaymentPage = () => {
         ${items
         .map((item) => {
           const product = getProduct(item.id);
-          const size = item.size || product.size || 'FREE SIZE';
+          const size = item.size || product.size || t('product.freeSize');
           const sale =
             product.salePrice != null
-              ? `<span class="sale-tag">Sale</span>`
+              ? `<span class="sale-tag">${t('payment.sale')}</span>`
               : '';
           return `
             <div class="order-row">
@@ -985,10 +991,10 @@ const initPaymentPage = () => {
             </div>`;
         })
         .join('')}
-        <div class="summary-row"><span>Subtotal</span><span>${moneyFixed(subtotal)}</span></div>
-        ${coupon ? `<div class="summary-row"><span>Discount (${coupon.code})</span><span>-${moneyFixed(discount)}</span></div>` : ''}
-        <div class="summary-row"><span>Shipping</span><span>${moneyFixed(SHIPPING)}</span></div>
-        <div class="summary-row total"><span>Total</span><span>${moneyFixed(total)}</span></div>
+        <div class="summary-row"><span>${t('cart.subtotal')}</span><span>${moneyFixed(subtotal)}</span></div>
+        ${coupon ? `<div class="summary-row"><span>${t('cart.discount')} (${coupon.code})</span><span>-${moneyFixed(discount)}</span></div>` : ''}
+        <div class="summary-row"><span>${t('cart.shipping')}</span><span>${moneyFixed(shippingFor(subtotal))}</span></div>
+        <div class="summary-row total"><span>${t('cart.total')}</span><span>${moneyFixed(total)}</span></div>
       </aside>`;
 
     root.querySelectorAll('input[name="pay"]').forEach((input) => {
@@ -998,37 +1004,17 @@ const initPaymentPage = () => {
       });
     });
 
-    const cardNumber = root.querySelector('[name="cardNumber"]');
-    cardNumber?.addEventListener('input', () => {
-      const digits = cardNumber.value.replace(/\D/g, '').slice(0, 16);
-      cardNumber.value = digits.replace(/(\d{4})(?=\d)/g, '$1 ').trim();
-    });
-
-    const cardExp = root.querySelector('[name="cardExp"]');
-    cardExp?.addEventListener('input', () => {
-      let v = cardExp.value.replace(/\D/g, '').slice(0, 4);
-      if (v.length >= 3) v = `${v.slice(0, 2)}/${v.slice(2)}`;
-      cardExp.value = v;
-    });
-
     root.querySelector('[data-place-order]')?.addEventListener('click', async () => {
       const btn = root.querySelector('[data-place-order]');
-      let cardLast4 = null;
+      const walletNumber = String(root.querySelector('[name="walletNumber"]')?.value || '').trim();
 
-      if (method === 'card') {
-        const number = String(root.querySelector('[name="cardNumber"]')?.value || '').replace(/\D/g, '');
-        const name = String(root.querySelector('[name="cardName"]')?.value || '').trim();
-        const exp = String(root.querySelector('[name="cardExp"]')?.value || '').trim();
-        const cvc = String(root.querySelector('[name="cardCvc"]')?.value || '').trim();
-        if (!name || !luhnOk(number) || !/^\d{2}\/\d{2}$/.test(exp) || cvc.length < 3) {
-          showToast('Please check your card details');
-          return;
-        }
-        cardLast4 = number.slice(-4);
+      if (method === 'instapay' && !/^01[0-9]{9}$/.test(walletNumber)) {
+        showToast(t('payment.cardInvalid'));
+        return;
       }
 
       btn.disabled = true;
-      btn.textContent = 'Placing order…';
+      btn.textContent = t('payment.placing');
 
       try {
         const res = await fetch('/api/orders', {
@@ -1044,7 +1030,6 @@ const initPaymentPage = () => {
             })),
             shipping: ship,
             paymentMethod: method,
-            cardLast4,
             couponCode: coupon ? coupon.code : undefined
           })
         });
@@ -1056,19 +1041,41 @@ const initPaymentPage = () => {
         }
         if (!res.ok) throw new Error(data.error || `Order failed (${res.status})`);
 
+        // Cash on delivery needs no payment gateway — confirm right away.
+        if (method === 'cod') {
+          writeCart([]);
+          clearCheckout();
+          clearCoupon();
+          root.innerHTML = `
+            <div class="payment-success">
+              <h1>${t('payment.thanks')}</h1>
+              <p class="order-id">${t('payment.orderId', { id: data.order.id })}</p>
+              <p>${t('payment.received', { email: ship.email })}</p>
+              <a href="collections.html" class="btn-gold">${t('payment.continueShop')}</a>
+            </div>`;
+          showReceiptModal(data.order);
+          return;
+        }
+
+        // Card / InstaPay: hand off to Paymob's hosted, PCI-compliant page.
+        btn.textContent = t('payment.redirecting');
+        const initRes = await fetch('/api/payments/initiate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ orderId: data.order.id, walletNumber })
+        });
+        const initData = await initRes.json().catch(() => ({}));
+        if (!initRes.ok || !initData.paymentUrl) {
+          throw new Error(initData.error || t('payment.gatewayUnavailable'));
+        }
+
         writeCart([]);
         clearCheckout();
         clearCoupon();
-        root.innerHTML = `
-          <div class="payment-success">
-            <h1>Thank you</h1>
-            <p class="order-id">Order ${data.order.id}</p>
-            <p>We've received your order and will be in touch shortly. A receipt has been emailed to ${ship.email}.</p>
-            <a href="collections.html" class="btn-gold">Continue shopping</a>
-          </div>`;
-        showReceiptModal(data.order);
+        window.location.href = initData.paymentUrl;
       } catch (err) {
-        showToast(err.message || 'Could not place order');
+        showToast(err.message || t('payment.failed'));
         btn.disabled = false;
         render();
       }
@@ -1084,9 +1091,9 @@ function showReceiptModal(order) {
   const overlay = document.createElement('div');
   overlay.className = 'receipt-overlay';
   overlay.innerHTML = `
-    <div class="receipt-modal" role="dialog" aria-modal="true" aria-label="Order receipt">
-      <button type="button" class="receipt-close" aria-label="Close">&times;</button>
-      <h2>Order confirmed</h2>
+    <div class="receipt-modal" role="dialog" aria-modal="true" aria-label="${t('receipt.aria')}">
+      <button type="button" class="receipt-close" aria-label="${t('receipt.close')}">&times;</button>
+      <h2>${t('receipt.title')}</h2>
       <p class="receipt-code">${order.id}</p>
       <div class="receipt-items">
         ${order.items
@@ -1100,13 +1107,13 @@ function showReceiptModal(order) {
           .join('')}
       </div>
       <div class="receipt-totals">
-        <div><span>Subtotal</span><span>${moneyFixed(order.subtotal)}</span></div>
-        ${order.discount ? `<div><span>Discount${order.couponCode ? ` (${order.couponCode})` : ''}</span><span>-${moneyFixed(order.discount)}</span></div>` : ''}
-        <div><span>Shipping</span><span>${moneyFixed(order.shippingFee)}</span></div>
-        <div class="receipt-total-row"><span>Total</span><span>${moneyFixed(order.total)}</span></div>
+        <div><span>${t('receipt.subtotal')}</span><span>${moneyFixed(order.subtotal)}</span></div>
+        ${order.discount ? `<div><span>${t('receipt.discount')}${order.couponCode ? ` (${order.couponCode})` : ''}</span><span>-${moneyFixed(order.discount)}</span></div>` : ''}
+        <div><span>${t('receipt.shipping')}</span><span>${moneyFixed(order.shippingFee)}</span></div>
+        <div class="receipt-total-row"><span>${t('receipt.total')}</span><span>${moneyFixed(order.total)}</span></div>
       </div>
-      <p class="receipt-note">A copy of this receipt — including your order code — has been emailed to ${order.shipping.email}.</p>
-      <button type="button" class="btn-gold full receipt-continue">Continue shopping</button>
+      <p class="receipt-note">${t('receipt.note', { email: order.shipping.email })}</p>
+      <button type="button" class="btn-gold full receipt-continue">${t('receipt.continue')}</button>
     </div>`;
 
   document.body.appendChild(overlay);
@@ -1183,23 +1190,23 @@ const initAccountPage = () => {
       stage === 'email'
         ? `
       <form data-request-form>
-        <p class="form-section-label">Sign in with your email</p>
-        <p class="account-lead">We'll email you a 6-digit code — no password needed.</p>
+        <p class="form-section-label">${t('account.title')}</p>
+        <p class="account-lead">${t('account.lead')}</p>
         <div class="form-grid single">
-          <input type="email" name="email" placeholder="Email" required autocomplete="email" value="${email}" />
+          <input type="email" name="email" placeholder="${t('account.emailLabel')}" required autocomplete="email" value="${email}" />
         </div>
-        <button type="submit" class="payment-btn">Send verification code</button>
+        <button type="submit" class="payment-btn">${t('account.sendCode')}</button>
         <p class="account-message" data-message></p>
       </form>`
         : `
       <form data-verify-form>
-        <p class="form-section-label">Enter your code</p>
-        <p class="account-lead">Sent to ${email}. It expires in 10 minutes.</p>
+        <p class="form-section-label">${t('account.codeLabel')}</p>
+        <p class="account-lead">${t('account.codeSentTo', { email })}</p>
         <div class="form-grid single">
-          <input type="text" name="code" inputmode="numeric" maxlength="6" placeholder="6-digit code" required />
+          <input type="text" name="code" inputmode="numeric" maxlength="6" placeholder="${t('account.codePlaceholder')}" required />
         </div>
-        <button type="submit" class="payment-btn">Verify & sign in</button>
-        <button type="button" class="link-btn" data-back>Use a different email</button>
+        <button type="submit" class="payment-btn">${t('account.verify')}</button>
+        <button type="button" class="link-btn" data-back>${t('account.backEmail')}</button>
         <p class="account-message" data-message></p>
       </form>`;
 
@@ -1208,7 +1215,7 @@ const initAccountPage = () => {
       const fd = new FormData(e.currentTarget);
       email = String(fd.get('email') || '').trim();
       const msg = root.querySelector('[data-message]');
-      msg.textContent = 'Sending…';
+      msg.textContent = t('account.sending');
       try {
         const res = await fetch('/api/account/request-code', {
           method: 'POST',
@@ -1216,13 +1223,13 @@ const initAccountPage = () => {
           body: JSON.stringify({ email })
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Could not send code');
+        if (!res.ok) throw new Error(data.error || t('account.codeSendFail'));
         stage = 'code';
         render();
-        showToast(data.message || 'Code sent — check your inbox');
-        if (data.devCode) showToast(`Dev mode — your code is ${data.devCode}`);
+        showToast(data.message || t('account.codeSent'));
+        if (data.devCode) showToast(t('account.devCode', { code: data.devCode }));
       } catch (err) {
-        msg.textContent = err.message || 'Could not send code';
+        msg.textContent = err.message || t('account.codeSendFail');
       }
     });
 
@@ -1236,7 +1243,7 @@ const initAccountPage = () => {
       const fd = new FormData(e.currentTarget);
       const code = String(fd.get('code') || '').trim();
       const msg = root.querySelector('[data-message]');
-      msg.textContent = 'Verifying…';
+      msg.textContent = t('account.verifying');
       try {
         const res = await fetch('/api/account/verify-code', {
           method: 'POST',
@@ -1244,10 +1251,10 @@ const initAccountPage = () => {
           body: JSON.stringify({ email, code })
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Incorrect code');
+        if (!res.ok) throw new Error(data.error || t('account.incorrectCode'));
         window.location.href = 'orders.html';
       } catch (err) {
-        msg.textContent = err.message || 'Incorrect code';
+        msg.textContent = err.message || t('account.incorrectCode');
       }
     });
   };
@@ -1261,7 +1268,7 @@ const initOrdersPage = () => {
   if (!root) return;
 
   const render = async () => {
-    root.innerHTML = '<p class="account-lead">Loading your orders…</p>';
+    root.innerHTML = `<p class="account-lead">${t('orders.loading')}</p>`;
     let me;
     try {
       const meRes = await fetch('/api/account/me', { credentials: 'same-origin' });
@@ -1270,8 +1277,8 @@ const initOrdersPage = () => {
     } catch {
       root.innerHTML = `
         <div class="cart-empty">
-          <p>Sign in to see your order history.</p>
-          <a href="account.html" class="btn-gold">Sign In</a>
+          <p>${t('orders.signInPrompt')}</p>
+          <a href="account.html" class="btn-gold">${t('nav.signIn')}</a>
         </div>`;
       return;
     }
@@ -1287,8 +1294,8 @@ const initOrdersPage = () => {
 
     root.innerHTML = `
       <div class="orders-head">
-        <p>Signed in as <strong>${me.email}</strong></p>
-        <button type="button" class="link-btn" data-sign-out>Sign out</button>
+        <p>${t('account.signedInAs')} <strong>${me.email}</strong></p>
+        <button type="button" class="link-btn" data-sign-out>${t('account.signOut')}</button>
       </div>
       ${
         orders.length
@@ -1306,11 +1313,11 @@ const initOrdersPage = () => {
               (i) => `<div class="order-history-item"><span>${i.qty} × ${i.name} (${i.color}/${i.size})</span><span>${moneyFixed(i.lineTotal)}</span></div>`
             )
             .join('')}
-          <div class="order-history-total"><span>Total</span><span>${moneyFixed(o.total)}</span></div>
+          <div class="order-history-total"><span>${t('account.total')}</span><span>${moneyFixed(o.total)}</span></div>
         </div>`
               )
               .join('')
-          : '<div class="cart-empty"><p>No orders yet.</p><a href="collections.html" class="btn-gold">GO TO SHOP</a></div>'
+          : `<div class="cart-empty"><p>${t('account.noOrders')}</p><a href="collections.html" class="btn-gold">${t('home.shop')}</a></div>`
       }`;
 
     root.querySelector('[data-sign-out]')?.addEventListener('click', async () => {
@@ -1343,13 +1350,13 @@ const initContactForm = () => {
     };
 
     if (!payload.name || !payload.email || !payload.message) {
-      showToast('Please fill in all fields');
+      showToast(t('contact.fillAll'));
       return;
     }
 
     if (submitBtn) {
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Sending…';
+      submitBtn.textContent = t('contact.sending');
     }
 
     try {
@@ -1359,16 +1366,16 @@ const initContactForm = () => {
         body: JSON.stringify(payload)
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Could not send message');
+      if (!res.ok) throw new Error(data.error || t('contact.fail'));
 
       form.reset();
-      showToast('Message sent — we will reply soon');
+      showToast(t('contact.sent'));
     } catch (err) {
-      showToast(err.message || 'Could not send message. Try WhatsApp instead.');
+      showToast(err.message || t('contact.fail'));
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Send Message';
+        submitBtn.textContent = t('contact.send');
       }
     }
   });

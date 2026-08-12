@@ -42,6 +42,8 @@ async function routeApi(req, res, pathname) {
     [/^\/api\/sales(\/.*)?\/?$/, () => loadLibApi('sales.js')],
     [/^\/api\/coupons(\/.*)?\/?$/, () => loadLibApi('coupons.js')],
     [/^\/api\/orders(\/.*)?\/?$/, () => loadLibApi('orders.js')],
+    [/^\/api\/payments\/initiate\/?$/, () => loadHandler('payments/initiate.js')],
+    [/^\/api\/payments\/webhook\/?$/, () => loadHandler('payments/webhook.js')],
     [/^\/api\/contact\/?$/, () => loadHandler('contact.js')],
     [/^\/api\/upload\/?$/, () => loadHandler('upload.js')]
   ];

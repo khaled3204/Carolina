@@ -97,7 +97,7 @@
       'payment.expiry': 'Expiry',
       'payment.cvc': 'CVC',
       'payment.fullName': 'Full name',
-      'payment.instapayNote': 'Transfer {amount} via InstaPay, then place your order. Use your order email as the transfer reference. Our team will confirm payment shortly.',
+      'payment.instapayNote': "You'll confirm {amount} on Paymob's secure InstaPay screen after placing your order.",
       'payment.placeOrder': 'Place order · {amount}',
       'payment.placing': 'Placing order…',
       'payment.secure': 'Encrypted session · Carolina never stores full card numbers',
@@ -112,6 +112,11 @@
       'payment.cardInvalid': 'Please check your card details',
       'payment.failed': 'Could not place order',
       'payment.sale': 'Sale',
+      'payment.orderId': 'Order {id}',
+      'payment.cardRedirectNote': "You'll enter your card details on Paymob's secure payment page after placing your order.",
+      'payment.walletNumber': 'Wallet / InstaPay mobile number',
+      'payment.redirecting': 'Redirecting to secure payment…',
+      'payment.gatewayUnavailable': 'Online payment is temporarily unavailable — please choose Cash on Delivery.',
 
       'receipt.title': 'Order confirmed',
       'receipt.aria': 'Order receipt',
@@ -125,6 +130,7 @@
 
       'product.color': 'COLOR',
       'product.size': 'SIZE',
+      'product.freeSize': 'FREE SIZE',
       'product.add': 'Add To Cart',
       'product.out': 'Out of stock',
       'product.related': 'You may also like',
@@ -171,7 +177,15 @@
       'contact.fillAll': 'Please fill in all fields',
       'contact.sent': 'Message sent — we will reply soon',
       'contact.fail': 'Could not send message. Try WhatsApp instead.',
-      'contact.infoAria': 'Contact information'
+      'contact.infoAria': 'Contact information',
+
+      'account.title': 'Sign in with your email',
+      'account.codeSendFail': 'Could not send code',
+      'account.devCode': 'Dev mode — your code is {code}',
+      'account.incorrectCode': 'Incorrect code',
+      'account.codeSentTo': 'Sent to {email}. It expires in 10 minutes.',
+      'orders.loading': 'Loading your orders…',
+      'orders.signInPrompt': 'Sign in to see your order history.'
     },
 
     ar: {
@@ -264,7 +278,7 @@
       'payment.expiry': 'الانتهاء',
       'payment.cvc': 'CVC',
       'payment.fullName': 'الاسم الكامل',
-      'payment.instapayNote': 'حوّل {amount} عبر إنستا باي ثم أكّد الطلب. استخدم بريد الطلب كمرجع للتحويل. سيؤكد فريقنا الدفع قريباً.',
+      'payment.instapayNote': 'ستؤكد {amount} على شاشة إنستا باي الآمنة من Paymob بعد تأكيد الطلب.',
       'payment.placeOrder': 'تأكيد الطلب · {amount}',
       'payment.placing': 'جارٍ تأكيد الطلب…',
       'payment.secure': 'جلسة مشفّرة · كارولينا لا تخزّن أرقام البطاقات كاملة',
@@ -279,6 +293,11 @@
       'payment.cardInvalid': 'يرجى التحقق من بيانات البطاقة',
       'payment.failed': 'تعذّر تأكيد الطلب',
       'payment.sale': 'تخفيض',
+      'payment.orderId': 'الطلب {id}',
+      'payment.cardRedirectNote': 'ستدخل بيانات بطاقتك على صفحة الدفع الآمنة من Paymob بعد تأكيد الطلب.',
+      'payment.walletNumber': 'رقم المحفظة / إنستا باي',
+      'payment.redirecting': 'جارٍ التحويل إلى صفحة الدفع الآمنة…',
+      'payment.gatewayUnavailable': 'الدفع الإلكتروني غير متاح مؤقتاً — يرجى اختيار الدفع عند الاستلام.',
 
       'receipt.title': 'تم تأكيد الطلب',
       'receipt.aria': 'إيصال الطلب',
@@ -292,6 +311,7 @@
 
       'product.color': 'اللون',
       'product.size': 'المقاس',
+      'product.freeSize': 'مقاس واحد',
       'product.add': 'أضف إلى السلة',
       'product.out': 'نفد المخزون',
       'product.related': 'قد يعجبك أيضاً',
@@ -321,6 +341,14 @@
       'account.signOut': 'تسجيل الخروج',
       'account.noOrders': 'لا توجد طلبات بعد.',
       'account.total': 'الإجمالي',
+
+      'account.title': 'سجّل الدخول عبر بريدك الإلكتروني',
+      'account.codeSendFail': 'تعذّر إرسال الرمز',
+      'account.devCode': 'وضع المطوّر — رمزك هو {code}',
+      'account.incorrectCode': 'رمز غير صحيح',
+      'account.codeSentTo': 'أُرسل إلى {email}. تنتهي صلاحيته خلال 10 دقائق.',
+      'orders.loading': 'جارٍ تحميل طلباتك…',
+      'orders.signInPrompt': 'سجّل الدخول لعرض سجل طلباتك.',
 
       'contact.eyebrow': 'لنصنع الجودة معاً',
       'contact.title': 'تواصل معنا',

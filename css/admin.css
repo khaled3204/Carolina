@@ -383,9 +383,20 @@
 
 .color-row-main {
   display: grid;
-  grid-template-columns: 1fr 52px auto;
+  grid-template-columns: 1fr 90px 44px auto;
   gap: 8px;
   align-items: center;
+}
+
+.color-row-main input[data-color-hex-text] {
+  font-family: monospace;
+  text-transform: lowercase;
+}
+
+.color-row-main input[data-color-hex-picker] {
+  padding: 0;
+  height: 34px;
+  cursor: pointer;
 }
 
 .color-image-picker-label {

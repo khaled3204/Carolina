@@ -23,7 +23,7 @@
     resetToken: new URLSearchParams(location.search).get('reset') || ''
   };
 
-  const money = (n) => `$${Number(n).toFixed(2)}`;
+  const money = (n) => `${Number(n).toFixed(2)} EGP`;
 
   function imageSrc(src) {
     const s = String(src || '').trim();
@@ -63,6 +63,18 @@
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
+  }
+
+  // Accepts "abc", "#abc", "aabbcc", "#aabbcc" (with/without stray spaces)
+  // and returns a valid 6-digit "#rrggbb" hex, or null if not parseable yet
+  // (e.g. while the user is still mid-typing).
+  function normalizeHex(value) {
+    const raw = String(value || '').trim().replace(/^#/, '');
+    if (/^[0-9a-fA-F]{6}$/.test(raw)) return `#${raw.toLowerCase()}`;
+    if (/^[0-9a-fA-F]{3}$/.test(raw)) {
+      return `#${raw.toLowerCase().split('').map((ch) => ch + ch).join('')}`;
+    }
+    return null;
   }
 
   async function boot() {
@@ -421,7 +433,8 @@
       <div class="color-row" data-color-row data-row-id="${rowId}">
         <div class="color-row-main">
           <input name="colorName" value="${escapeHtml(c.name || '')}" placeholder="Color name" required />
-          <input name="colorHex" type="color" value="${escapeHtml(c.hex || '#cccccc')}" />
+          <input name="colorHexText" type="text" data-color-hex-text value="${escapeHtml(c.hex || '#cccccc')}" placeholder="#rrggbb" maxlength="7" />
+          <input name="colorHex" type="color" data-color-hex-picker value="${escapeHtml(/^#[0-9a-fA-F]{6}$/.test(c.hex || '') ? c.hex : '#cccccc')}" />
           <button type="button" class="btn-admin ghost small" data-remove-color ${isFirst ? 'disabled' : ''}>✕</button>
         </div>
         <p class="color-image-picker-label">Photos for this color <span style="font-weight:300">(leave blank to use all photos)</span></p>
@@ -614,7 +627,7 @@
           <tbody>
             ${state.coupons
               .map((c) => {
-                const discount = c.type === 'fixed' ? `$${Number(c.value).toFixed(2)}` : `${c.value}%`;
+                const discount = c.type === 'fixed' ? `${Number(c.value).toFixed(2)} EGP` : `${c.value}%`;
                 const used = c.usageLimit ? `${c.usedCount || 0} / ${c.usageLimit}` : `${c.usedCount || 0}`;
                 return `
                 <tr>
@@ -783,6 +796,24 @@
 
     function bindColorRow(row) {
       row.querySelector('[data-remove-color]')?.addEventListener('click', () => row.remove());
+
+      // Keep the typed hex field and the native color-circle picker in sync
+      // in both directions, so the swatch always matches what was typed.
+      const textInput = row.querySelector('[data-color-hex-text]');
+      const pickerInput = row.querySelector('[data-color-hex-picker]');
+      if (textInput && pickerInput) {
+        textInput.addEventListener('input', () => {
+          const hex = normalizeHex(textInput.value);
+          if (hex) pickerInput.value = hex;
+        });
+        textInput.addEventListener('blur', () => {
+          const hex = normalizeHex(textInput.value);
+          if (hex) textInput.value = hex;
+        });
+        pickerInput.addEventListener('input', () => {
+          textInput.value = pickerInput.value;
+        });
+      }
     }
 
     app.querySelectorAll('[data-color-row]').forEach(bindColorRow);
@@ -897,7 +928,7 @@
       const colors = [...form.querySelectorAll('[data-color-row]')]
         .map((row) => ({
           name: row.querySelector('[name="colorName"]')?.value.trim() || '',
-          hex: row.querySelector('[name="colorHex"]')?.value || '#cccccc',
+          hex: normalizeHex(row.querySelector('[data-color-hex-text]')?.value) || row.querySelector('[data-color-hex-picker]')?.value || '#cccccc',
           images: collectRowSelectedImages(row)
         }))
         .filter((c) => c.name);
