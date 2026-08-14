@@ -878,6 +878,33 @@ const initPaymentPage = () => {
   const root = document.querySelector('[data-payment-page]');
   if (!root) return;
 
+  // If we're being redirected back here by Kashier after a card payment,
+  // show a status message instead of the picker — the cart/checkout state
+  // was already cleared client-side right before we sent the shopper to
+  // Kashier, so this has to be checked before the empty-cart guard below.
+  // Kashier appends its own query params (paymentStatus, etc.) to our
+  // redirect URL, alongside the orderId we put there ourselves.
+  const returnParams = new URLSearchParams(window.location.search);
+  const returnOrderId = returnParams.get('orderId');
+  const returnStatus = (returnParams.get('paymentStatus') || '').toUpperCase();
+  if (returnOrderId && returnStatus) {
+    if (returnStatus === 'SUCCESS') {
+      root.innerHTML = `
+        <div class="payment-success">
+          <h1>${t('payment.thanks')}</h1>
+          <p class="order-id">${t('payment.orderId', { id: returnOrderId })}</p>
+          <a href="collections.html" class="btn-gold">${t('payment.continueShop')}</a>
+        </div>`;
+    } else {
+      root.innerHTML = `
+        <div class="payment-empty">
+          <p>${t('payment.failed')}</p>
+          <a href="checkout.html" class="btn-gold">${t('payment.backCheckout')}</a>
+        </div>`;
+    }
+    return;
+  }
+
   const checkout = readCheckout();
   const items = readCart();
 
@@ -929,25 +956,10 @@ const initPaymentPage = () => {
               <p class="pay-option-desc">${t('payment.cardDesc')}</p>
             </div>
           </label>
-          <label class="pay-option ${method === 'instapay' ? 'is-selected' : ''}">
-            <input type="radio" name="pay" value="instapay" ${method === 'instapay' ? 'checked' : ''} />
-            <div>
-              <p class="pay-option-title">${t('payment.instapay')}</p>
-              <p class="pay-option-desc">${t('payment.instapayDesc')}</p>
-            </div>
-          </label>
         </div>
 
         <div class="card-fields ${method === 'card' ? 'is-open' : ''}" data-card-fields>
           <p class="instapay-note is-open">${t('payment.cardRedirectNote')}</p>
-        </div>
-
-        <div class="card-fields ${method === 'instapay' ? 'is-open' : ''}" data-wallet-fields>
-          <label class="span-2">${t('payment.walletNumber')}<input name="walletNumber" inputmode="tel" placeholder="01xxxxxxxxx" value="${ship.phone || ''}" maxlength="15" /></label>
-        </div>
-
-        <div class="instapay-note ${method === 'instapay' ? 'is-open' : ''}">
-          ${t('payment.instapayNote', { amount: `<strong>${moneyFixed(total)}</strong>` })}
         </div>
 
         <button type="button" class="place-order-btn" data-place-order>
@@ -1011,12 +1023,6 @@ const initPaymentPage = () => {
 
     root.querySelector('[data-place-order]')?.addEventListener('click', async () => {
       const btn = root.querySelector('[data-place-order]');
-      const walletNumber = String(root.querySelector('[name="walletNumber"]')?.value || '').trim();
-
-      if (method === 'instapay' && !/^01[0-9]{9}$/.test(walletNumber)) {
-        showToast(t('payment.cardInvalid'));
-        return;
-      }
 
       btn.disabled = true;
       btn.textContent = t('payment.placing');
@@ -1062,13 +1068,13 @@ const initPaymentPage = () => {
           return;
         }
 
-        // Card / InstaPay: hand off to Paymob's hosted, PCI-compliant page.
+        // Card: hand off to Kashier's hosted, PCI-compliant payment page.
         btn.textContent = t('payment.redirecting');
         const initRes = await fetch('/api/payments/initiate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'same-origin',
-          body: JSON.stringify({ orderId: data.order.id, walletNumber })
+          body: JSON.stringify({ orderId: data.order.id })
         });
         const initData = await initRes.json().catch(() => ({}));
         if (!initRes.ok || !initData.paymentUrl) {

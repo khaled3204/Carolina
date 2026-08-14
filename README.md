@@ -11,7 +11,7 @@ Static storefront with a working payment page and a full admin panel.
 | `/product.html` | Product detail |
 | `/cart.html` | Cart |
 | `/checkout.html` | Shipping details |
-| `/payment.html` | Payment (COD / Card / InstaPay) |
+| `/payment.html` | Payment (COD / Card via Kashier) |
 | `/admin` | Admin panel |
 
 ## Run locally

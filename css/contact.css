@@ -143,7 +143,7 @@ html[data-theme='dark'] .page-contact .main-nav a[aria-current="page"] {
   font-weight: 400;
   line-height: 1.5;
   letter-spacing: normal;
-  text-align: left;
+  text-align: start;
   text-transform: none;
   color: var(--contact-muted);
 }
@@ -162,16 +162,16 @@ html[data-theme='dark'] .page-contact .main-nav a[aria-current="page"] {
 
 .contact-info-item {
   padding: 0 24px;
-  border-left: 1px solid #000000;
+  border-inline-start: 1px solid #000000;
 }
 
 .contact-info-item:first-child {
-  border-left: none;
-  padding-left: 0;
+  border-inline-start: none;
+  padding-inline-start: 0;
 }
 
 .contact-info-item:last-child {
-  padding-right: 0;
+  padding-inline-end: 0;
 }
 
 .contact-info-icon {
@@ -215,7 +215,7 @@ html[data-theme='dark'] .page-contact .main-nav a[aria-current="page"] {
 .contact-info-item:first-child p {
   font-size: 14px;
   line-height: 1.5;
-  text-align: left;
+  text-align: start;
 }
 
 .contact-form-box {
@@ -265,7 +265,7 @@ html[data-theme='dark'] .page-contact .main-nav a[aria-current="page"] {
 .contact-form-grid input[name="email"] {
   grid-column: 1;
   grid-row: 2;
-  width: 434px;
+  width: 235px;
 }
 
 .contact-form-grid textarea {
@@ -435,7 +435,7 @@ html[lang='ar'] .page-contact .contact-submit {
   }
 
   .contact-info-item {
-    border-left: none;
+    border-inline-start: none;
     padding: 0;
   }
 
