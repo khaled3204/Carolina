@@ -431,6 +431,11 @@
       if (!key) return;
       el.setAttribute('aria-label', t(key, readVars(el)));
     });
+    root.querySelectorAll('[data-src-en]').forEach((el) => {
+      const lang = getLang();
+      const src = lang === 'ar' ? el.getAttribute('data-src-ar') : el.getAttribute('data-src-en');
+      if (src) el.setAttribute('src', src);
+    });
     const titleKey = document.documentElement.getAttribute('data-i18n-title');
     if (titleKey) document.title = t(titleKey);
   }
