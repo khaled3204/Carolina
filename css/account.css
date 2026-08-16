@@ -106,6 +106,18 @@
   align-items: center;
   margin-bottom: 24px;
   font-size: 14px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.orders-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.orders-head-actions .link-btn {
+  margin-top: 0;
 }
 
 .order-history-card {

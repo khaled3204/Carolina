@@ -20,10 +20,32 @@
     message: '',
     error: '',
     expandedOrders: new Set(),
+    orderSearch: '',
     resetToken: new URLSearchParams(location.search).get('reset') || ''
   };
 
   const money = (n) => `${Number(n).toFixed(2)} EGP`;
+
+  function filteredOrders() {
+    const q = state.orderSearch.trim().toLowerCase();
+    if (!q) return state.orders;
+    return state.orders.filter((o) => {
+      const name = `${o.shipping?.firstName || ''} ${o.shipping?.lastName || ''}`.trim();
+      const haystack = [
+        o.id,
+        name,
+        o.shipping?.email,
+        o.shipping?.phone,
+        o.shipping?.city,
+        o.paymentMethod,
+        o.status
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  }
 
   function imageSrc(src) {
     const s = String(src || '').trim();
@@ -119,10 +141,29 @@
   }
 
   function render() {
-    if (state.view === 'login') return renderAuth('login');
-    if (state.view === 'forgot') return renderAuth('forgot');
-    if (state.view === 'reset') return renderAuth('reset');
-    renderDashboard();
+    const activeEl = document.activeElement;
+    const focusId = activeEl?.getAttribute?.('data-focus-id');
+    const selStart = activeEl && 'selectionStart' in activeEl ? activeEl.selectionStart : null;
+    const selEnd = activeEl && 'selectionEnd' in activeEl ? activeEl.selectionEnd : null;
+
+    if (state.view === 'login') renderAuth('login');
+    else if (state.view === 'forgot') renderAuth('forgot');
+    else if (state.view === 'reset') renderAuth('reset');
+    else renderDashboard();
+
+    if (focusId) {
+      const el = app.querySelector(`[data-focus-id="${focusId}"]`);
+      if (el) {
+        el.focus();
+        if (typeof selStart === 'number' && typeof el.setSelectionRange === 'function') {
+          try {
+            el.setSelectionRange(selStart, selEnd);
+          } catch {
+            /* ignore — not all input types support selection ranges */
+          }
+        }
+      }
+    }
   }
 
   function renderAuth(mode) {
@@ -356,8 +397,18 @@
                 <h2>Orders</h2>
                 <p>${state.orders.length} order${state.orders.length === 1 ? '' : 's'} · click View for full details (items, quantities, shipping).</p>
               </div>
+              <div class="order-search-wrap">
+                <input
+                  type="search"
+                  class="order-search-input"
+                  data-order-search
+                  data-focus-id="order-search"
+                  placeholder="Search by order ID, name, email, phone, city…"
+                  value="${escapeHtml(state.orderSearch)}"
+                />
+              </div>
             </div>
-            <div class="admin-card">${renderOrdersTable(state.orders)}</div>
+            <div class="admin-card">${renderOrdersTable(filteredOrders())}</div>
           </section>
 
           <section class="panel ${state.tab === 'settings' ? 'is-active' : ''}">
@@ -401,6 +452,22 @@
       </div>`
       )
       .join('');
+  }
+
+  const SIZE_OPTIONS = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'FREE SIZE'];
+
+  function renderSizePicker(selectedSizes) {
+    const selected = (selectedSizes || []).map((s) => String(s).trim().toUpperCase());
+    return `
+      <div class="size-picker" data-size-picker>
+        ${SIZE_OPTIONS.map(
+          (size) => `
+          <label class="size-option ${selected.includes(size) ? 'is-selected' : ''}">
+            <input type="checkbox" name="sizeOption" value="${size}" ${selected.includes(size) ? 'checked' : ''} />
+            <span>${size}</span>
+          </label>`
+        ).join('')}
+      </div>`;
   }
 
   let colorRowSeq = 0;
@@ -468,9 +535,10 @@
           <label>Price<input name="price" type="number" min="0" step="0.01" value="${escapeHtml(p.price)}" required /></label>
           <label>Stock<input name="stock" type="number" min="0" step="1" value="${escapeHtml(p.stock ?? 0)}" /></label>
         </div>
-        <label>Sizes <span style="font-weight:300">(comma separated)</span>
-          <input name="sizes" value="${escapeHtml((p.sizes || [p.size || 'FREE SIZE']).join(', '))}" />
-        </label>
+        <div class="size-picker-field">
+          <span style="font-family:var(--font-nav);font-size:12px;letter-spacing:0.05em;color:var(--ink-soft)">Sizes <span style="font-weight:300">(select all that apply)</span></span>
+          <div data-size-picker-wrap>${renderSizePicker(p.sizes || [p.size || 'FREE SIZE'])}</div>
+        </div>
         <div class="image-builder">
           <span style="font-family:var(--font-nav);font-size:12px;letter-spacing:0.05em;color:var(--ink-soft)">Pictures</span>
           <div class="image-slots" data-image-list>${renderImageSlots(p.images)}</div>
@@ -656,7 +724,11 @@
   }
 
   function renderOrdersTable(orders) {
-    if (!orders.length) return '<p class="empty-hint">No orders yet.</p>';
+    if (!orders.length) {
+      return state.orderSearch.trim()
+        ? '<p class="empty-hint">No orders match your search.</p>'
+        : '<p class="empty-hint">No orders yet.</p>';
+    }
     const itemCount = (o) => (o.items || []).reduce((sum, i) => sum + (Number(i.qty) || 0), 0);
     const totalPairs = orders.reduce((sum, o) => sum + itemCount(o), 0);
     const revenue = orders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
@@ -950,10 +1022,7 @@
         nameAr: fd.get('nameAr'),
         price: Number(fd.get('price')),
         stock: fd.get('stock') === '' || fd.get('stock') == null ? undefined : Number(fd.get('stock')),
-        sizes: String(fd.get('sizes') || '')
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean),
+        sizes: [...form.querySelectorAll('[name="sizeOption"]:checked')].map((el) => el.value),
         images,
         description: fd.get('description'),
         descriptionAr: fd.get('descriptionAr'),
@@ -1117,6 +1186,11 @@
         }
         render();
       });
+    });
+
+    app.querySelector('[data-order-search]')?.addEventListener('input', (e) => {
+      state.orderSearch = e.target.value;
+      render();
     });
 
     app.querySelectorAll('[data-toggle-order]').forEach((btn) => {

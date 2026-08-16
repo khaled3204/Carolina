@@ -1305,8 +1305,11 @@ const initOrdersPage = () => {
 
     root.innerHTML = `
       <div class="orders-head">
-        <p>${t('account.signedInAs')} <strong>${me.email}</strong></p>
-        <button type="button" class="link-btn" data-sign-out>${t('account.signOut')}</button>
+        <p>${me.isAdmin ? t('account.welcomeAdmin') : `${t('account.signedInAs')} <strong>${me.email}</strong>`}</p>
+        <div class="orders-head-actions">
+          ${me.isAdmin ? `<a href="/admin/" class="link-btn">${t('account.openAdmin')}</a>` : ''}
+          <button type="button" class="link-btn" data-sign-out>${t('account.signOut')}</button>
+        </div>
       </div>
       ${
         orders.length
